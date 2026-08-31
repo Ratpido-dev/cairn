@@ -1,0 +1,88 @@
+"""Tests unitaires du tokenizer Power.log — sur des lignes réelles de la fixture."""
+
+from src.cairn.power_log import (
+    CreateGame,
+    EntityDef,
+    GameInfo,
+    PlayerName,
+    TagChange,
+    parse_entity_ref,
+    parse_lines,
+)
+
+L = "D 00:08:05.1088643 GameState.DebugPrintPower() - "
+G = "D 00:08:05.1088643 GameState.DebugPrintGame() - "
+
+
+def events(*lines):
+    return list(parse_lines(lines))
+
+
+def test_entity_ref_bloc_avec_espaces_dans_le_nom():
+    ref = parse_entity_ref(
+        "[entityName=Garrosh corrompu id=54 zone=PLAY zonePos=0 cardId=HERO_01b player=1]"
+    )
+    assert ref.entity_id == 54
+    assert ref.name == "Garrosh corrompu"
+    assert ref.card_id == "HERO_01b"
+    assert ref.player == 1
+
+
+def test_entity_ref_entier_et_nom_de_joueur():
+    assert parse_entity_ref("132").entity_id == 132
+    ref = parse_entity_ref("UNKNOWN HUMAN PLAYER")
+    assert ref.name == "UNKNOWN HUMAN PLAYER"
+    assert ref.entity_id is None
+
+
+def test_tag_change_avec_tag_numerique():
+    (ev,) = events(
+        L + "TAG_CHANGE Entity=[entityName=Garrosh corrompu id=54 zone=PLAY "
+        "zonePos=0 cardId=HERO_01b player=1] tag=479 value=0 "
+    )
+    assert isinstance(ev, TagChange)
+    assert ev.tag == "479"
+    assert ev.ref.entity_id == 54
+
+
+def test_full_entity_regroupe_ses_tags():
+    evs = events(
+        L + "FULL_ENTITY - Creating ID=4 CardID=",
+        L + "    tag=ZONE value=DECK",
+        L + "    tag=CONTROLLER value=1",
+        L + "TAG_CHANGE Entity=4 tag=ZONE value=HAND",
+    )
+    assert len(evs) == 2
+    full, tag_change = evs
+    assert isinstance(full, EntityDef) and full.kind == "full"
+    assert full.entity_id == 4
+    assert full.card_id is None
+    assert full.tags == {"ZONE": "DECK", "CONTROLLER": "1"}
+    assert isinstance(tag_change, TagChange)
+
+
+def test_show_entity_reference_entiere():
+    (ev,) = events(L + "SHOW_ENTITY - Updating Entity=132 CardID=EDR_449e")
+    assert isinstance(ev, EntityDef) and ev.kind == "show"
+    assert ev.entity_id == 132
+    assert ev.card_id == "EDR_449e"
+
+
+def test_create_game_et_infos_partie():
+    evs = events(
+        L + "CREATE_GAME",
+        G + "GameType=GT_RANKED",
+        G + "FormatType=FT_STANDARD",
+        G + "PlayerID=2, PlayerName=Joueur#12345",
+    )
+    assert isinstance(evs[0], CreateGame)
+    assert GameInfo(key="GameType", value="GT_RANKED") in evs
+    assert PlayerName(player_id=2, name="Joueur#12345") in evs
+
+
+def test_lignes_non_gamestate_ignorees():
+    assert events(
+        "D 00:08:05.1 PowerTaskList.DebugPrintPower() - TAG_CHANGE Entity=4 tag=ZONE value=HAND",
+        "E 11:39:14.0 PowerProcessor.BuildTaskList(): Hit a SUB_SPELL_END task",
+        "n'importe quoi",
+    ) == []

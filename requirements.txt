@@ -1,0 +1,2 @@
+pytest>=8
+PySide6>=6.7  # UI (phase 2)

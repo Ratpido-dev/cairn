@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cairn-tracker"
+version = "1.0.0"
+description = "Tracker Hearthstone natif Linux, léger, qui lit les journaux du jeu sans Wine"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Ratpido" }]
+requires-python = ">=3.10"
+keywords = ["hearthstone", "tracker", "linux", "wine", "proton", "overlay"]
+classifiers = [
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Games/Entertainment",
+]
+dependencies = ["PySide6>=6.5"]
+
+[project.urls]
+Homepage = "https://github.com/ratpido/cairn"
+Issues = "https://github.com/ratpido/cairn/issues"
+
+[project.scripts]
+cairn = "cairn.app:main"
+cairn-doctor = "cairn.doctor:main"
+cairn-cards = "cairn.cards_fetch:main"
+
+[project.gui-scripts]
+# même programme, mais sans console attachée : c'est ce que lance le raccourci
+cairn-gui = "cairn.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+cairn = ["ui/qml/*.qml", "ui/*.svg"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

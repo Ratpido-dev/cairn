@@ -1,0 +1,11 @@
+# Bouton « Sponsor » de GitHub. Tout est commenté : rien ne s'affiche tant qu'une
+# ligne n'est pas décommentée et remplie avec un vrai identifiant.
+#
+# Règle qui ne bougera pas : aucune fonction de Cairn ne sera jamais réservée
+# à ceux qui financent. Le projet est sous licence MIT et le reste entièrement.
+
+# github: ratpido            # GitHub Sponsors — pas de commission sur les particuliers
+# patreon: ratpido           # abonnement mensuel ; suppose une publication par mois
+# ko_fi: ratpido             # pourboire ponctuel, sans engagement de récurrence
+# liberapay: ratpido         # récurrent, associatif, adapté au logiciel libre
+# custom: ["https://…"]      # n'importe quelle autre page

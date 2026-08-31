@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Cairn
+GenericName=Hearthstone tracker
+GenericName[fr]=Tracker Hearthstone
+Comment=Track your Hearthstone games natively on Linux
+Comment[fr]=Suivez vos parties de Hearthstone nativement sous Linux
+Exec=cairn
+Icon=cairn
+Terminal=false
+Categories=Game;
+Keywords=hearthstone;deck;tracker;overlay;
+StartupNotify=true
+StartupWMClass=cairn

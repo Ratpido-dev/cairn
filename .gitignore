@@ -1,0 +1,30 @@
+# ---- Python -----------------------------------------------------------------
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+build/
+dist/
+*.egg-info/
+
+# ---- point de collecte (Cloudflare Worker) -----------------------------------
+collecte/node_modules/
+collecte/.wrangler/
+collecte/package-lock.json
+
+# ---- données téléchargées ou dérivées ----------------------------------------
+# Base de cartes HearthstoneJSON : 11 Mo, régénérée par « cairn-cards all » et
+# mise à jour toute seule à chaque patch du jeu.
+data/cards/
+
+# Parties de référence : les .gz pseudonymisés SONT versionnés (c'est ce qui
+# fait tourner les tests sur un clone neuf) ; le journal décompressé, non — il
+# est reconstruit à la volée par paths.preparer_fixtures().
+data/fixtures/*/Power.log
+
+# Captures d'écran d'avant la refonte, gardées en local pour comparaison :
+# elles montrent l'ancienne interface et de vrais battletags.
+docs/captures/qa-obsolete/
+
+# Notes de travail personnelles, hors dépôt public (financement, admin).
+docs/PATREON.md

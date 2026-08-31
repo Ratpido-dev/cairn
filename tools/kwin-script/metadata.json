@@ -1,0 +1,13 @@
+{
+    "KPlugin": {
+        "Id": "cairn-follow",
+        "Name": "Cairn — overlays sur le bureau de Hearthstone",
+        "Description": "Ouvre les fenêtres de Cairn sur le bureau virtuel où se trouve Hearthstone, au lieu du bureau courant.",
+        "Version": "1.0",
+        "License": "MIT",
+        "Authors": [{ "Name": "Cairn" }]
+    },
+    "KPackageStructure": "KWin/Script",
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "code/main.js"
+}

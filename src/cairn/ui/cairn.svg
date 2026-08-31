@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Cairn : trois pierres empilées, celle du faîte en braise.
+       Volontairement sans détail : doit rester lisible à 16 px. -->
+  <rect width="128" height="128" rx="28" fill="#0f1117"/>
+  <ellipse cx="64" cy="96" rx="42" ry="13" fill="#8b93a7"/>
+  <ellipse cx="64" cy="70" rx="31" ry="11" fill="#a6adbd"/>
+  <ellipse cx="64" cy="47" rx="20" ry="9"  fill="#e08a2e"/>
+</svg>

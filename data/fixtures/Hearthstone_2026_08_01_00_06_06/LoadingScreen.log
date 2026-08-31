@@ -1,0 +1,513 @@
+D 00:06:27.2532202 Box.Awake()
+D 00:06:28.0134001 LoadingScreen.OnSceneLoaded() - prevMode=STARTUP currMode=LOGIN
+D 00:06:28.0134001 LoadingScreen.OnSceneLoaded() - m_assetLoadStartTimestamp=5250897342307524240
+D 00:06:28.0134001 LoadingScreen.OnSceneLoaded() - END - INVALID != Phase.WAITING_FOR_SCENE_LOAD
+D 00:06:36.8260182 LoadingScreen.OnScenePreUnload() - prevMode=LOGIN nextMode=HUB m_phase=INVALID
+D 00:06:37.8273538 LoadingScreen.OnSceneUnloaded() - prevMode=LOGIN nextMode=HUB m_phase=INVALID
+D 00:06:38.1819631 LoadingScreen.OnSceneLoaded() - prevMode=LOGIN currMode=HUB
+D 00:06:38.1819631 LoadingScreen.OnSceneLoaded() - END - INVALID != Phase.WAITING_FOR_SCENE_LOAD
+D 00:06:40.0950201 LoadingScreen.OnScenePreUnload() - prevMode=HUB nextMode=COLLECTIONMANAGER m_phase=INVALID
+D 00:06:40.3989971 LoadingScreen.OnSceneUnloaded() - prevMode=HUB nextMode=COLLECTIONMANAGER m_phase=INVALID
+D 00:06:43.2691205 LoadingScreen.OnSceneLoaded() - prevMode=HUB currMode=COLLECTIONMANAGER
+D 00:06:43.2691205 LoadingScreen.OnSceneLoaded() - END - INVALID != Phase.WAITING_FOR_SCENE_LOAD
+D 00:06:57.8415368 LoadingScreen.OnScenePreUnload() - prevMode=COLLECTIONMANAGER nextMode=HUB m_phase=INVALID
+D 00:06:58.8795802 LoadingScreen.OnSceneUnloaded() - prevMode=COLLECTIONMANAGER nextMode=HUB m_phase=INVALID
+D 00:06:59.2684695 LoadingScreen.OnSceneLoaded() - prevMode=COLLECTIONMANAGER currMode=HUB
+D 00:06:59.2684695 LoadingScreen.OnSceneLoaded() - END - INVALID != Phase.WAITING_FOR_SCENE_LOAD
+D 00:06:59.3146033 LoadingScreen.OnScenePreUnload() - prevMode=HUB nextMode=PACKOPENING m_phase=INVALID
+D 00:06:59.6641897 LoadingScreen.OnSceneUnloaded() - prevMode=HUB nextMode=PACKOPENING m_phase=INVALID
+D 00:07:00.9530215 LoadingScreen.OnSceneLoaded() - prevMode=HUB currMode=PACKOPENING
+D 00:07:00.9530215 LoadingScreen.OnSceneLoaded() - END - INVALID != Phase.WAITING_FOR_SCENE_LOAD
+D 00:07:25.0683332 LoadingScreen.OnScenePreUnload() - prevMode=PACKOPENING nextMode=HUB m_phase=INVALID
+D 00:07:26.0736607 LoadingScreen.OnSceneUnloaded() - prevMode=PACKOPENING nextMode=HUB m_phase=INVALID
+D 00:07:26.4314619 LoadingScreen.OnSceneLoaded() - prevMode=PACKOPENING currMode=HUB
+D 00:07:26.4314619 LoadingScreen.OnSceneLoaded() - END - INVALID != Phase.WAITING_FOR_SCENE_LOAD
+D 00:07:44.7864753 LoadingScreen.OnScenePreUnload() - prevMode=HUB nextMode=TOURNAMENT m_phase=INVALID
+D 00:07:45.1214074 LoadingScreen.OnSceneUnloaded() - prevMode=HUB nextMode=TOURNAMENT m_phase=INVALID
+D 00:07:46.6305889 LoadingScreen.OnSceneLoaded() - prevMode=HUB currMode=TOURNAMENT
+D 00:07:46.6305889 LoadingScreen.OnSceneLoaded() - END - INVALID != Phase.WAITING_FOR_SCENE_LOAD
+D 00:08:03.3523881 LoadingScreen.SetTransitionAudioListener() - AudioListener (UnityEngine.AudioListener)
+D 00:08:03.3859724 LoadingScreen.OnScenePreUnload() - prevMode=TOURNAMENT nextMode=GAMEPLAY m_phase=INVALID
+D 00:08:03.3859724 LoadingScreen.OnSceneUnloaded() - prevMode=TOURNAMENT nextMode=GAMEPLAY m_phase=WAITING_FOR_SCENE_UNLOAD
+D 00:08:03.3859724 LoadingScreen.OnSceneUnloaded() - m_assetLoadEndTimestamp=5250897343261248184
+D 00:08:03.3859724 Box.OnDestroy()
+D 00:08:03.3859724 LoadingScreen.SetAssetLoadStartTimestamp() - m_assetLoadStartTimestamp=0
+D 00:08:03.5318597 Gameplay.Awake()
+D 00:08:03.5318597 Gameplay.Start()
+D 00:08:04.3168799 Gameplay.OnPowerHistory() - powerList=208
+D 00:08:04.3425279 Gameplay.OnPowerHistory() - powerList=3
+D 00:08:04.3538496 Gameplay.OnEntityChoices() - id=1
+D 00:08:04.3773644 Gameplay.OnPowerHistory() - powerList=1
+D 00:08:04.4024554 Gameplay.OnEntityChoices() - id=2
+D 00:08:04.7265835 LoadingScreen.DisableTransitionUnfriendlyStuff() - ALT(Clone) (UnityEngine.GameObject)
+D 00:08:04.7684104 LoadingScreen.DisableTransitionUnfriendlyStuff() - BoardCameras(Clone) (UnityEngine.GameObject)
+D 00:08:04.9694696 LoadingScreen.DisableTransitionUnfriendlyStuff() - BoardStandardGame(Clone) (UnityEngine.GameObject)
+D 00:08:05.1088643 MulliganManager.HandleGameStart() - IsPastBeginPhase()=False
+D 00:08:05.1088643 MulliganManager.WaitForHeroesAndStartAnimations()
+D 00:08:05.1088643 MulliganManager.HandleGameStart() - IsMulliganPhase()=False
+D 00:08:09.5885863 MulliganManager.WaitForHeroesAndStartAnimations() - NotifySceneLoaded()
+D 00:08:09.7537945 LoadingScreen.OnSceneLoaded() - prevMode=TOURNAMENT currMode=GAMEPLAY
+D 00:08:13.8325136 LoadingScreen.HackWaitThenStartTransitionEffects() - START
+D 00:08:13.8325136 LoadingScreen.FadeOut()
+D 00:08:14.8790287 LoadingScreen.OnFadeOutComplete()
+D 00:08:14.8790287 LoadingScreen.FinishPreviousScene()
+D 00:08:14.8790287 LoadingScreen.ClearPreviousSceneAssets() - START m_assetLoadStartTimestamp=0 m_assetLoadEndTimestamp=5250897343261248184
+D 00:08:14.8790287 LoadingScreen.ClearPreviousSceneAssets() - END m_assetLoadStartTimestamp=5250897343261248184 m_assetLoadEndTimestamp=0
+D 00:08:14.8790287 LoadingScreen.FadeIn()
+D 00:08:15.9195465 LoadingScreen.OnFadeInComplete()
+D 00:08:34.3903116 Gameplay.OnPowerHistory() - powerList=8
+D 00:08:34.8652873 Gameplay.OnPowerHistory() - powerList=128
+D 00:08:34.9000430 Gameplay.OnAllOptions() - id=1
+D 00:08:53.3226282 Gameplay.OnPowerHistory() - powerList=34
+D 00:08:53.3648958 Gameplay.OnAllOptions() - id=2
+D 00:08:59.6697133 Gameplay.OnPowerHistory() - powerList=67
+D 00:09:10.1887488 Gameplay.OnPowerHistory() - powerList=75
+D 00:09:10.2232217 Gameplay.OnAllOptions() - id=4
+D 00:09:21.6735863 Gameplay.OnPowerHistory() - powerList=20
+D 00:09:21.7002880 Gameplay.OnAllOptions() - id=5
+D 00:09:23.3993616 Gameplay.OnPowerHistory() - powerList=68
+D 00:09:32.6093094 Gameplay.OnPowerHistory() - powerList=20
+D 00:09:34.2313755 Gameplay.OnPowerHistory() - powerList=19
+D 00:09:37.2166131 Gameplay.OnPowerHistory() - powerList=84
+D 00:09:37.2395591 Gameplay.OnAllOptions() - id=9
+D 00:09:47.0969474 Gameplay.OnPowerHistory() - powerList=36
+D 00:09:47.1189480 Gameplay.OnEntityChoices() - id=3
+D 00:09:58.5601604 Gameplay.OnPowerHistory() - powerList=25
+D 00:09:58.5868399 Gameplay.OnEntityChoices() - id=4
+D 00:10:18.2983860 Gameplay.OnPowerHistory() - powerList=25
+D 00:10:18.3249210 Gameplay.OnAllOptions() - id=10
+D 00:10:20.5485951 Gameplay.OnPowerHistory() - powerList=78
+D 00:10:47.6663191 Gameplay.OnPowerHistory() - powerList=21
+D 00:10:51.3361175 Gameplay.OnPowerHistory() - powerList=86
+D 00:10:51.3936295 Gameplay.OnAllOptions() - id=13
+D 00:11:23.2080183 Gameplay.OnPowerHistory() - powerList=38
+D 00:11:23.2288664 Gameplay.OnAllOptions() - id=14
+D 00:11:27.6692791 Gameplay.OnPowerHistory() - powerList=10
+D 00:11:27.7136371 Gameplay.OnEntityChoices() - id=5
+D 00:11:32.1579947 Gameplay.OnPowerHistory() - powerList=37
+D 00:11:32.1817016 Gameplay.OnAllOptions() - id=15
+D 00:11:33.4426444 Gameplay.OnPowerHistory() - powerList=63
+D 00:11:33.4701882 Gameplay.OnAllOptions() - id=16
+D 00:11:35.2914471 Gameplay.OnPowerHistory() - powerList=85
+D 00:11:57.5119151 Gameplay.OnPowerHistory() - powerList=38
+D 00:12:04.0274906 Gameplay.OnPowerHistory() - powerList=70
+D 00:12:07.9376626 Gameplay.OnPowerHistory() - powerList=65
+D 00:12:10.2194271 Gameplay.OnPowerHistory() - powerList=69
+D 00:12:12.2283715 Gameplay.OnPowerHistory() - powerList=193
+D 00:12:29.7666538 Gameplay.OnPowerHistory() - powerList=41
+D 00:12:31.1963500 Gameplay.OnPowerHistory() - powerList=39
+D 00:12:32.6456360 Gameplay.OnPowerHistory() - powerList=39
+D 00:12:52.5967073 Gameplay.OnPowerHistory() - powerList=103
+D 00:12:52.6347444 Gameplay.OnAllOptions() - id=26
+D 00:13:25.8679734 Gameplay.OnPowerHistory() - powerList=136
+D 00:13:25.8968988 Gameplay.OnAllOptions() - id=27
+D 00:13:33.1987838 Gameplay.OnPowerHistory() - powerList=87
+D 00:13:33.2231098 Gameplay.OnAllOptions() - id=28
+D 00:13:37.7758588 Gameplay.OnPowerHistory() - powerList=73
+D 00:13:37.8034082 Gameplay.OnAllOptions() - id=29
+D 00:13:38.7550291 Gameplay.OnPowerHistory() - powerList=9
+D 00:13:38.7830202 Gameplay.OnEntityChoices() - id=6
+D 00:13:45.4650742 Gameplay.OnPowerHistory() - powerList=37
+D 00:13:45.4895438 Gameplay.OnAllOptions() - id=30
+D 00:13:46.9923058 Gameplay.OnPowerHistory() - powerList=63
+D 00:13:47.0161708 Gameplay.OnAllOptions() - id=31
+D 00:13:50.2467857 Gameplay.OnPowerHistory() - powerList=109
+D 00:13:58.1514688 Gameplay.OnPowerHistory() - powerList=73
+D 00:14:03.8696234 Gameplay.OnPowerHistory() - powerList=61
+D 00:14:14.7023360 Gameplay.OnPowerHistory() - powerList=35
+D 00:14:18.2845758 Gameplay.OnPowerHistory() - powerList=66
+D 00:14:22.0932117 Gameplay.OnPowerHistory() - powerList=106
+D 00:14:22.1196168 Gameplay.OnAllOptions() - id=37
+D 00:14:26.4504758 Gameplay.OnPowerHistory() - powerList=29
+D 00:14:26.4712635 Gameplay.OnAllOptions() - id=38
+D 00:14:37.5037268 Gameplay.OnPowerHistory() - powerList=64
+D 00:14:37.5345607 Gameplay.OnAllOptions() - id=39
+D 00:14:39.7094401 Gameplay.OnPowerHistory() - powerList=95
+D 00:14:54.1651442 Gameplay.OnPowerHistory() - powerList=62
+D 00:15:00.7085618 Gameplay.OnPowerHistory() - powerList=22
+D 00:15:00.7526344 Gameplay.OnEntityChoices() - id=7
+D 00:15:19.9869228 Gameplay.OnPowerHistory() - powerList=31
+D 00:15:25.0725996 Gameplay.OnPowerHistory() - powerList=84
+D 00:15:25.1044392 Gameplay.OnAllOptions() - id=43
+D 00:15:35.3585461 Gameplay.OnPowerHistory() - powerList=36
+D 00:15:35.3783090 Gameplay.OnAllOptions() - id=44
+D 00:15:41.6978877 Gameplay.OnPowerHistory() - powerList=36
+D 00:15:41.7213937 Gameplay.OnAllOptions() - id=45
+D 00:15:45.7546443 Gameplay.OnPowerHistory() - powerList=81
+D 00:15:45.7803308 Gameplay.OnAllOptions() - id=46
+D 00:15:51.4293419 Gameplay.OnPowerHistory() - powerList=72
+D 00:15:51.4558376 Gameplay.OnAllOptions() - id=47
+D 00:15:52.8901525 Gameplay.OnPowerHistory() - powerList=87
+D 00:15:52.9192048 Gameplay.OnAllOptions() - id=48
+D 00:15:57.2392459 Gameplay.OnPowerHistory() - powerList=96
+D 00:16:09.8115850 Gameplay.OnPowerHistory() - powerList=31
+D 00:16:14.2261121 Gameplay.OnPowerHistory() - powerList=79
+D 00:16:16.0807702 Gameplay.OnPowerHistory() - powerList=96
+D 00:16:16.1032599 Gameplay.OnAllOptions() - id=52
+D 00:16:41.4373338 Gameplay.OnPowerHistory() - powerList=59
+D 00:16:41.4701286 Gameplay.OnAllOptions() - id=53
+D 00:16:52.1016198 Gameplay.OnPowerHistory() - powerList=37
+D 00:16:52.1299485 Gameplay.OnAllOptions() - id=54
+D 00:17:03.6483549 Gameplay.OnPowerHistory() - powerList=47
+D 00:17:03.6745983 Gameplay.OnAllOptions() - id=55
+D 00:17:15.9945795 Gameplay.OnPowerHistory() - powerList=15
+D 00:17:16.0272134 Gameplay.OnEntityChoices() - id=8
+D 00:17:19.1923282 Gameplay.OnPowerHistory() - powerList=42
+D 00:17:19.2199373 Gameplay.OnAllOptions() - id=56
+D 00:17:20.5767358 Gameplay.OnPowerHistory() - powerList=68
+D 00:17:20.6041548 Gameplay.OnAllOptions() - id=57
+D 00:17:23.1444563 Gameplay.OnPowerHistory() - powerList=132
+D 00:17:32.9705887 Gameplay.OnPowerHistory() - powerList=52
+D 00:17:40.3450196 Gameplay.OnPowerHistory() - powerList=96
+D 00:17:57.7062166 Gameplay.OnPowerHistory() - powerList=44
+D 00:18:09.1420972 Gameplay.OnPowerHistory() - powerList=69
+D 00:18:14.5458473 Gameplay.OnPowerHistory() - powerList=179
+D 00:18:27.7464692 Gameplay.OnPowerHistory() - powerList=80
+D 00:18:36.3163223 Gameplay.OnPowerHistory() - powerList=50
+D 00:18:38.1596282 Gameplay.OnPowerHistory() - powerList=166
+D 00:18:38.1831792 Gameplay.OnAllOptions() - id=66
+D 00:18:48.1442927 Gameplay.OnPowerHistory() - powerList=170
+D 00:18:48.1712484 Gameplay.OnAllOptions() - id=67
+D 00:18:51.5067974 Gameplay.OnPowerHistory() - powerList=47
+D 00:18:51.5419584 Gameplay.OnAllOptions() - id=68
+D 00:19:02.3703991 Gameplay.OnPowerHistory() - powerList=72
+D 00:19:02.3941086 Gameplay.OnEntityChoices() - id=9
+D 00:19:13.2615732 Gameplay.OnPowerHistory() - powerList=33
+D 00:19:13.2953489 Gameplay.OnEntityChoices() - id=10
+D 00:19:26.3761711 Gameplay.OnPowerHistory() - powerList=33
+D 00:19:26.3963689 Gameplay.OnAllOptions() - id=69
+D 00:19:30.1621550 Gameplay.OnPowerHistory() - powerList=67
+D 00:19:30.1873808 Gameplay.OnAllOptions() - id=70
+D 00:19:32.9793632 Gameplay.OnPowerHistory() - powerList=144
+D 00:19:48.9161885 Gameplay.OnPowerHistory() - powerList=33
+D 00:19:51.8144847 Gameplay.OnPowerHistory() - powerList=161
+D 00:20:00.6362212 Gameplay.OnPowerHistory() - powerList=70
+D 00:20:10.7822339 Gameplay.OnPowerHistory() - powerList=50
+D 00:20:14.4475566 Gameplay.OnPowerHistory() - powerList=49
+D 00:20:22.3025877 Gameplay.OnPowerHistory() - powerList=145
+D 00:20:22.3399845 Gameplay.OnAllOptions() - id=77
+D 00:20:29.1996797 Gameplay.OnPowerHistory() - powerList=61
+D 00:20:29.2233479 Gameplay.OnAllOptions() - id=78
+D 00:20:33.2584121 Gameplay.OnPowerHistory() - powerList=16
+D 00:20:33.2912346 Gameplay.OnEntityChoices() - id=11
+D 00:20:39.0583309 Gameplay.OnPowerHistory() - powerList=42
+D 00:20:39.0844854 Gameplay.OnAllOptions() - id=79
+D 00:20:41.4006518 Gameplay.OnPowerHistory() - powerList=84
+D 00:20:41.4261110 Gameplay.OnAllOptions() - id=80
+D 00:20:43.5343683 Gameplay.OnPowerHistory() - powerList=142
+D 00:20:52.8039139 Gameplay.OnPowerHistory() - powerList=55
+D 00:21:00.3825333 Gameplay.OnPowerHistory() - powerList=67
+D 00:21:12.1325881 Gameplay.OnPowerHistory() - powerList=39
+D 00:21:12.1694619 Gameplay.OnEntityChoices() - id=12
+D 00:21:23.3158879 Gameplay.OnPowerHistory() - powerList=43
+D 00:21:31.2541905 Gameplay.OnPowerHistory() - powerList=62
+D 00:21:35.8585505 Gameplay.OnPowerHistory() - powerList=51
+D 00:21:39.0134400 Gameplay.OnPowerHistory() - powerList=149
+D 00:21:39.0555393 Gameplay.OnAllOptions() - id=87
+D 00:21:48.9826902 Gameplay.OnPowerHistory() - powerList=95
+D 00:21:49.0078361 Gameplay.OnAllOptions() - id=88
+D 00:22:04.5935286 Gameplay.OnPowerHistory() - powerList=83
+D 00:22:04.6198561 Gameplay.OnAllOptions() - id=89
+D 00:22:07.1143587 Gameplay.OnPowerHistory() - powerList=119
+D 00:22:07.1396419 Gameplay.OnAllOptions() - id=90
+D 00:22:12.3282401 Gameplay.OnPowerHistory() - powerList=96
+D 00:22:12.3641130 Gameplay.OnAllOptions() - id=91
+D 00:22:13.2192892 Gameplay.OnPowerHistory() - powerList=90
+D 00:22:13.2609178 Gameplay.OnAllOptions() - id=92
+D 00:22:16.3084744 Gameplay.OnPowerHistory() - powerList=15
+D 00:22:16.3436004 Gameplay.OnEntityChoices() - id=13
+D 00:22:18.8068410 Gameplay.OnPowerHistory() - powerList=42
+D 00:22:18.8358439 Gameplay.OnAllOptions() - id=93
+D 00:22:21.3113536 Gameplay.OnPowerHistory() - powerList=80
+D 00:22:21.3407217 Gameplay.OnAllOptions() - id=94
+D 00:22:22.7676518 Gameplay.OnPowerHistory() - powerList=149
+D 00:22:30.7442939 Gameplay.OnPowerHistory() - powerList=173
+D 00:22:41.9027890 Gameplay.OnPowerHistory() - powerList=56
+D 00:22:46.6140363 Gameplay.OnPowerHistory() - powerList=68
+D 00:23:01.6487370 Gameplay.OnPowerHistory() - powerList=37
+D 00:23:06.3269431 Gameplay.OnPowerHistory() - powerList=68
+D 00:23:13.9177466 Gameplay.OnPowerHistory() - powerList=64
+D 00:23:16.1050388 Gameplay.OnPowerHistory() - powerList=139
+D 00:23:16.1280899 Gameplay.OnAllOptions() - id=102
+D 00:23:34.1619284 Gameplay.OnPowerHistory() - powerList=15
+D 00:23:34.1962199 Gameplay.OnEntityChoices() - id=14
+D 00:23:37.1582769 Gameplay.OnPowerHistory() - powerList=40
+D 00:23:37.1901507 Gameplay.OnAllOptions() - id=103
+D 00:23:40.0149899 Gameplay.OnPowerHistory() - powerList=69
+D 00:23:40.0404893 Gameplay.OnAllOptions() - id=104
+D 00:23:47.0041729 Gameplay.OnPowerHistory() - powerList=54
+D 00:23:47.0326781 Gameplay.OnAllOptions() - id=105
+D 00:23:52.0625198 Gameplay.OnPowerHistory() - powerList=128
+D 00:23:56.7653572 Gameplay.OnPowerHistory() - powerList=46
+D 00:24:03.6907751 Gameplay.OnPowerHistory() - powerList=40
+D 00:24:16.8186704 Gameplay.OnPowerHistory() - powerList=293
+D 00:24:37.8307966 Gameplay.OnPowerHistory() - powerList=107
+D 00:24:52.6711119 Gameplay.OnPowerHistory() - powerList=150
+D 00:24:52.7043065 Gameplay.OnAllOptions() - id=111
+D 00:25:17.9539215 Gameplay.OnPowerHistory() - powerList=75
+D 00:25:17.9811999 Gameplay.OnAllOptions() - id=112
+D 00:25:20.6048395 Gameplay.OnPowerHistory() - powerList=104
+D 00:25:20.6337238 Gameplay.OnAllOptions() - id=113
+D 00:25:32.9363728 Gameplay.OnPowerHistory() - powerList=95
+D 00:25:32.9664870 Gameplay.OnAllOptions() - id=114
+D 00:25:48.7934405 Gameplay.OnPowerHistory() - powerList=77
+D 00:25:48.8203398 Gameplay.OnAllOptions() - id=115
+D 00:25:58.5673777 Gameplay.OnPowerHistory() - powerList=52
+D 00:25:58.5899023 Gameplay.OnAllOptions() - id=116
+D 00:26:08.1710801 Gameplay.OnPowerHistory() - powerList=94
+D 00:26:08.2024239 Gameplay.OnAllOptions() - id=117
+D 00:26:09.3117289 Gameplay.OnPowerHistory() - powerList=43
+D 00:26:09.3653113 Gameplay.OnAllOptions() - id=118
+D 00:26:10.7986877 Gameplay.OnPowerHistory() - powerList=123
+D 00:26:31.6015093 Gameplay.OnPowerHistory() - powerList=16
+D 00:26:37.2904086 Gameplay.OnPowerHistory() - powerList=39
+D 00:26:37.3197392 Gameplay.OnEntityChoices() - id=15
+D 00:26:54.9270949 Gameplay.OnPowerHistory() - powerList=26
+D 00:26:58.8165481 Gameplay.OnPowerHistory() - powerList=60
+D 00:26:58.8676038 Gameplay.OnEntityChoices() - id=16
+D 00:27:15.2002680 Gameplay.OnPowerHistory() - powerList=263
+D 00:27:15.3131105 Gameplay.OnPowerHistory() - powerList=62
+D 00:27:25.9738007 Gameplay.OnPowerHistory() - powerList=94
+D 00:27:29.7599706 Gameplay.OnPowerHistory() - powerList=83
+D 00:27:33.0505881 Gameplay.OnPowerHistory() - powerList=103
+D 00:27:34.4141623 Gameplay.OnPowerHistory() - powerList=127
+D 00:27:34.4479586 Gameplay.OnAllOptions() - id=127
+D 00:28:00.4441061 Gameplay.OnPowerHistory() - powerList=51
+D 00:28:00.4700126 Gameplay.OnAllOptions() - id=128
+D 00:28:02.4421991 Gameplay.OnPowerHistory() - powerList=85
+D 00:28:02.4628703 Gameplay.OnAllOptions() - id=129
+D 00:28:14.8478857 Gameplay.OnPowerHistory() - powerList=38
+D 00:28:14.8745071 Gameplay.OnEntityChoices() - id=16
+D 00:28:24.5840211 Gameplay.OnPowerHistory() - powerList=33
+D 00:28:24.6187379 Gameplay.OnAllOptions() - id=130
+D 00:28:26.3057318 Gameplay.OnPowerHistory() - powerList=32
+D 00:28:26.3515258 Gameplay.OnAllOptions() - id=131
+D 00:28:47.6141192 Gameplay.OnPowerHistory() - powerList=57
+D 00:28:47.6362488 Gameplay.OnAllOptions() - id=132
+D 00:28:50.5496363 Gameplay.OnPowerHistory() - powerList=93
+D 00:28:50.5796032 Gameplay.OnAllOptions() - id=133
+D 00:28:51.4794573 Gameplay.OnPowerHistory() - powerList=40
+D 00:28:51.4984036 Gameplay.OnAllOptions() - id=134
+D 00:28:52.6867909 Gameplay.OnPowerHistory() - powerList=9
+D 00:28:52.7208508 Gameplay.OnEntityChoices() - id=17
+D 00:28:55.6246849 Gameplay.OnPowerHistory() - powerList=36
+D 00:28:55.6532764 Gameplay.OnAllOptions() - id=135
+D 00:28:57.0236077 Gameplay.OnPowerHistory() - powerList=57
+D 00:28:57.0496891 Gameplay.OnAllOptions() - id=136
+D 00:28:57.7098956 Gameplay.OnPowerHistory() - powerList=120
+D 00:29:13.9184008 Gameplay.OnPowerHistory() - powerList=43
+D 00:29:22.1964176 Gameplay.OnPowerHistory() - powerList=55
+D 00:29:22.2252824 Gameplay.OnEntityChoices() - id=18
+D 00:29:52.3127593 Gameplay.OnPowerHistory() - powerList=26
+D 00:30:04.3164577 Gameplay.OnPowerHistory() - powerList=61
+D 00:30:06.3166218 Gameplay.OnPowerHistory() - powerList=18
+D 00:30:10.7135338 Gameplay.OnPowerHistory() - powerList=93
+D 00:30:12.4451329 Gameplay.OnPowerHistory() - powerList=20
+D 00:30:14.7262721 Gameplay.OnPowerHistory() - powerList=274
+D 00:30:14.7664778 Gameplay.OnAllOptions() - id=144
+D 00:30:42.1567598 Gameplay.OnPowerHistory() - powerList=88
+D 00:30:42.1908550 Gameplay.OnEntityChoices() - id=19
+D 00:31:09.2594611 Gameplay.OnPowerHistory() - powerList=67
+D 00:31:28.1504735 LoadingScreen.SetTransitionAudioListener() - AudioListener (UnityEngine.AudioListener)
+D 00:31:28.1504735 LoadingScreen.OnScenePreUnload() - prevMode=GAMEPLAY nextMode=TOURNAMENT m_phase=INVALID
+D 00:31:28.3302208 Gameplay.Unload()
+D 00:31:28.3302208 LoadingScreen.OnSceneUnloaded() - prevMode=GAMEPLAY nextMode=TOURNAMENT m_phase=WAITING_FOR_SCENE_UNLOAD
+D 00:31:28.3302208 LoadingScreen.OnSceneUnloaded() - m_assetLoadEndTimestamp=5250897357308896857
+D 00:31:28.3302208 Gameplay.OnDestroy()
+D 00:31:29.0975643 Box.Awake()
+D 00:31:29.0975643 LoadingScreen.DisableTransitionUnfriendlyStuff() - TheBox(Clone) (UnityEngine.GameObject)
+D 00:31:30.4590969 LoadingScreen.OnSceneLoaded() - prevMode=GAMEPLAY currMode=TOURNAMENT
+D 00:31:30.4590969 LoadingScreen.HackWaitThenStartTransitionEffects() - START
+D 00:31:30.4590969 LoadingScreen.FadeOut()
+D 00:31:31.4957408 LoadingScreen.OnFadeOutComplete()
+D 00:31:31.4957408 LoadingScreen.FinishPreviousScene()
+D 00:31:31.4957408 LoadingScreen.ClearPreviousSceneAssets() - START m_assetLoadStartTimestamp=5250897343261248184 m_assetLoadEndTimestamp=5250897357308896857
+D 00:31:31.4957408 LoadingScreen.ClearPreviousSceneAssets() - END m_assetLoadStartTimestamp=5250897357308896857 m_assetLoadEndTimestamp=0
+D 00:31:31.4957408 LoadingScreen.FadeIn()
+D 00:31:32.5684107 LoadingScreen.OnFadeInComplete()
+D 00:31:48.2223929 LoadingScreen.SetTransitionAudioListener() - AudioListener (UnityEngine.AudioListener)
+D 00:31:48.2472466 LoadingScreen.OnScenePreUnload() - prevMode=TOURNAMENT nextMode=GAMEPLAY m_phase=INVALID
+D 00:31:48.2472466 LoadingScreen.OnSceneUnloaded() - prevMode=TOURNAMENT nextMode=GAMEPLAY m_phase=WAITING_FOR_SCENE_UNLOAD
+D 00:31:48.2472466 LoadingScreen.OnSceneUnloaded() - m_assetLoadEndTimestamp=5250897357509860987
+D 00:31:48.2472466 Box.OnDestroy()
+D 00:31:48.2472466 LoadingScreen.SetAssetLoadStartTimestamp() - m_assetLoadStartTimestamp=0
+D 00:31:48.3622564 Gameplay.Awake()
+D 00:31:48.3622564 Gameplay.Start()
+D 00:31:49.0791042 Gameplay.OnPowerHistory() - powerList=211
+D 00:31:49.0882660 Gameplay.OnPowerHistory() - powerList=3
+D 00:31:49.1109634 Gameplay.OnEntityChoices() - id=1
+D 00:31:49.1347882 Gameplay.OnPowerHistory() - powerList=1
+D 00:31:49.1587277 Gameplay.OnEntityChoices() - id=2
+D 00:31:49.4091884 LoadingScreen.DisableTransitionUnfriendlyStuff() - TTN(Clone) (UnityEngine.GameObject)
+D 00:31:49.4453808 LoadingScreen.DisableTransitionUnfriendlyStuff() - BoardCameras(Clone) (UnityEngine.GameObject)
+D 00:31:49.6059672 LoadingScreen.DisableTransitionUnfriendlyStuff() - BoardStandardGame(Clone) (UnityEngine.GameObject)
+D 00:31:49.7070865 MulliganManager.HandleGameStart() - IsPastBeginPhase()=False
+D 00:31:49.7070865 MulliganManager.WaitForHeroesAndStartAnimations()
+D 00:31:49.7070865 MulliganManager.HandleGameStart() - IsMulliganPhase()=False
+D 00:31:53.8584195 MulliganManager.WaitForHeroesAndStartAnimations() - NotifySceneLoaded()
+D 00:31:54.0227727 LoadingScreen.OnSceneLoaded() - prevMode=TOURNAMENT currMode=GAMEPLAY
+D 00:31:58.0567584 LoadingScreen.HackWaitThenStartTransitionEffects() - START
+D 00:31:58.0567584 LoadingScreen.FadeOut()
+D 00:31:59.1254731 LoadingScreen.OnFadeOutComplete()
+D 00:31:59.1254731 LoadingScreen.FinishPreviousScene()
+D 00:31:59.1254731 LoadingScreen.ClearPreviousSceneAssets() - START m_assetLoadStartTimestamp=0 m_assetLoadEndTimestamp=5250897357509860987
+D 00:31:59.1254731 LoadingScreen.ClearPreviousSceneAssets() - END m_assetLoadStartTimestamp=5250897357509860987 m_assetLoadEndTimestamp=0
+D 00:31:59.1254731 LoadingScreen.FadeIn()
+D 00:32:00.1783036 LoadingScreen.OnFadeInComplete()
+D 00:32:24.1607116 Gameplay.OnPowerHistory() - powerList=80
+D 00:32:24.5570194 Gameplay.OnPowerHistory() - powerList=35
+D 00:32:41.0941744 Gameplay.OnPowerHistory() - powerList=14
+D 00:32:41.1404024 Gameplay.OnEntityChoices() - id=3
+D 00:32:44.4464183 Gameplay.OnPowerHistory() - powerList=23
+D 00:32:47.9321827 Gameplay.OnPowerHistory() - powerList=69
+D 00:32:47.9870887 Gameplay.OnAllOptions() - id=3
+D 00:32:52.9319604 Gameplay.OnPowerHistory() - powerList=35
+D 00:32:52.9548920 Gameplay.OnAllOptions() - id=4
+D 00:32:54.9096203 Gameplay.OnPowerHistory() - powerList=74
+D 00:33:00.4109255 Gameplay.OnPowerHistory() - powerList=46
+D 00:33:02.1828427 Gameplay.OnPowerHistory() - powerList=79
+D 00:33:02.2125923 Gameplay.OnAllOptions() - id=7
+D 00:33:15.9583681 Gameplay.OnPowerHistory() - powerList=87
+D 00:33:15.9940522 Gameplay.OnAllOptions() - id=8
+D 00:33:20.5062803 Gameplay.OnPowerHistory() - powerList=41
+D 00:33:20.5336035 Gameplay.OnAllOptions() - id=9
+D 00:33:21.9334902 Gameplay.OnPowerHistory() - powerList=100
+D 00:33:30.0960465 Gameplay.OnPowerHistory() - powerList=31
+D 00:33:32.8023204 Gameplay.OnPowerHistory() - powerList=86
+D 00:33:32.8357136 Gameplay.OnAllOptions() - id=12
+D 00:33:38.1949651 Gameplay.OnPowerHistory() - powerList=49
+D 00:33:38.2165466 Gameplay.OnAllOptions() - id=13
+D 00:33:41.9663776 Gameplay.OnPowerHistory() - powerList=88
+D 00:33:48.7384669 Gameplay.OnPowerHistory() - powerList=28
+D 00:33:51.0361745 Gameplay.OnPowerHistory() - powerList=41
+D 00:33:55.1185640 Gameplay.OnPowerHistory() - powerList=86
+D 00:33:56.2077054 Gameplay.OnPowerHistory() - powerList=42
+D 00:34:06.5949834 Gameplay.OnPowerHistory() - powerList=30
+D 00:34:07.6821586 Gameplay.OnPowerHistory() - powerList=46
+D 00:34:10.8438912 Gameplay.OnPowerHistory() - powerList=100
+D 00:34:12.1779831 Gameplay.OnPowerHistory() - powerList=94
+D 00:34:12.2034106 Gameplay.OnAllOptions() - id=22
+D 00:34:34.8353789 Gameplay.OnPowerHistory() - powerList=44
+D 00:34:34.8561942 Gameplay.OnAllOptions() - id=23
+D 00:34:36.8820335 Gameplay.OnPowerHistory() - powerList=39
+D 00:34:36.9074795 Gameplay.OnAllOptions() - id=24
+D 00:34:39.8974239 Gameplay.OnPowerHistory() - powerList=38
+D 00:34:39.9229029 Gameplay.OnAllOptions() - id=25
+D 00:34:43.5593826 Gameplay.OnPowerHistory() - powerList=32
+D 00:34:43.5848612 Gameplay.OnAllOptions() - id=26
+D 00:34:47.9242961 Gameplay.OnPowerHistory() - powerList=109
+D 00:35:03.7927483 Gameplay.OnPowerHistory() - powerList=19
+D 00:35:05.7357931 Gameplay.OnPowerHistory() - powerList=22
+D 00:35:07.1649236 Gameplay.OnPowerHistory() - powerList=63
+D 00:35:13.0086143 Gameplay.OnPowerHistory() - powerList=128
+D 00:35:13.0333580 Gameplay.OnAllOptions() - id=31
+D 00:35:47.6544854 Gameplay.OnPowerHistory() - powerList=72
+D 00:35:47.6817860 Gameplay.OnAllOptions() - id=32
+D 00:36:00.7265603 Gameplay.OnPowerHistory() - powerList=79
+D 00:36:00.7491331 Gameplay.OnAllOptions() - id=33
+D 00:36:18.6367965 Gameplay.OnPowerHistory() - powerList=81
+D 00:36:18.6642799 Gameplay.OnAllOptions() - id=34
+D 00:36:21.9236554 Gameplay.OnPowerHistory() - powerList=86
+D 00:36:21.9744315 Gameplay.OnAllOptions() - id=35
+D 00:36:24.6980461 Gameplay.OnPowerHistory() - powerList=97
+D 00:36:42.5256604 Gameplay.OnPowerHistory() - powerList=93
+D 00:36:47.8281630 Gameplay.OnPowerHistory() - powerList=63
+D 00:36:52.5366293 Gameplay.OnPowerHistory() - powerList=63
+D 00:36:57.0455061 Gameplay.OnPowerHistory() - powerList=90
+D 00:36:59.2122883 Gameplay.OnPowerHistory() - powerList=104
+D 00:36:59.2405491 Gameplay.OnAllOptions() - id=41
+D 00:37:19.5293658 Gameplay.OnPowerHistory() - powerList=74
+D 00:37:19.5511792 Gameplay.OnAllOptions() - id=42
+D 00:37:21.0264281 Gameplay.OnPowerHistory() - powerList=26
+D 00:37:21.0603161 Gameplay.OnAllOptions() - id=43
+D 00:37:23.1619138 Gameplay.OnPowerHistory() - powerList=46
+D 00:37:23.1874383 Gameplay.OnAllOptions() - id=44
+D 00:37:26.0313082 Gameplay.OnPowerHistory() - powerList=87
+D 00:37:47.1327836 Gameplay.OnPowerHistory() - powerList=27
+D 00:37:48.0370935 Gameplay.OnPowerHistory() - powerList=28
+D 00:37:49.1642607 Gameplay.OnPowerHistory() - powerList=28
+D 00:37:50.5066156 Gameplay.OnPowerHistory() - powerList=28
+D 00:37:51.4236266 Gameplay.OnPowerHistory() - powerList=108
+D 00:37:56.0355452 Gameplay.OnPowerHistory() - powerList=25
+D 00:37:57.2614773 Gameplay.OnPowerHistory() - powerList=28
+D 00:37:58.3963884 Gameplay.OnPowerHistory() - powerList=29
+D 00:37:59.4370059 Gameplay.OnPowerHistory() - powerList=41
+D 00:38:00.9621627 Gameplay.OnPowerHistory() - powerList=120
+D 00:38:00.9786415 Gameplay.OnAllOptions() - id=55
+D 00:38:40.5274937 Gameplay.OnPowerHistory() - powerList=43
+D 00:38:40.5523952 Gameplay.OnAllOptions() - id=56
+D 00:38:47.4598999 Gameplay.OnPowerHistory() - powerList=61
+D 00:38:47.4913409 Gameplay.OnAllOptions() - id=57
+D 00:38:50.7462056 Gameplay.OnPowerHistory() - powerList=36
+D 00:38:50.7890001 Gameplay.OnAllOptions() - id=58
+D 00:39:21.4380180 Gameplay.OnPowerHistory() - powerList=52
+D 00:39:21.4637532 Gameplay.OnAllOptions() - id=59
+D 00:39:25.1004591 Gameplay.OnPowerHistory() - powerList=262
+D 00:39:25.1257535 Gameplay.OnAllOptions() - id=60
+D 00:39:33.5394370 Gameplay.OnPowerHistory() - powerList=26
+D 00:39:33.5659338 Gameplay.OnAllOptions() - id=61
+D 00:39:35.8575278 Gameplay.OnPowerHistory() - powerList=42
+D 00:39:35.8814171 Gameplay.OnAllOptions() - id=62
+D 00:39:38.0134625 Gameplay.OnPowerHistory() - powerList=104
+D 00:39:46.2075807 Gameplay.OnPowerHistory() - powerList=21
+D 00:39:49.4670723 Gameplay.OnPowerHistory() - powerList=63
+D 00:39:53.1592553 Gameplay.OnPowerHistory() - powerList=61
+D 00:39:58.6398209 Gameplay.OnPowerHistory() - powerList=60
+D 00:39:59.9391149 Gameplay.OnPowerHistory() - powerList=39
+D 00:40:00.8525768 Gameplay.OnPowerHistory() - powerList=39
+D 00:40:01.6303793 Gameplay.OnPowerHistory() - powerList=39
+D 00:40:02.4251367 Gameplay.OnPowerHistory() - powerList=39
+D 00:40:03.6192639 Gameplay.OnPowerHistory() - powerList=37
+D 00:40:06.3959774 Gameplay.OnPowerHistory() - powerList=156
+D 00:40:06.4422622 Gameplay.OnAllOptions() - id=73
+D 00:40:18.1524811 Gameplay.OnPowerHistory() - powerList=135
+D 00:40:18.1793348 Gameplay.OnAllOptions() - id=74
+D 00:40:44.9115462 Gameplay.OnPowerHistory() - powerList=278
+D 00:40:44.9353103 Gameplay.OnAllOptions() - id=75
+D 00:40:48.0624308 Gameplay.OnPowerHistory() - powerList=42
+D 00:40:48.0896111 Gameplay.OnAllOptions() - id=76
+D 00:40:50.7138556 Gameplay.OnPowerHistory() - powerList=101
+D 00:41:08.1267181 Gameplay.OnPowerHistory() - powerList=19
+D 00:41:08.1540305 Gameplay.OnEntityChoices() - id=4
+D 00:41:11.8451309 Gameplay.OnPowerHistory() - powerList=23
+D 00:41:14.5454855 Gameplay.OnPowerHistory() - powerList=77
+D 00:41:21.8318772 Gameplay.OnPowerHistory() - powerList=61
+D 00:41:27.8032549 Gameplay.OnPowerHistory() - powerList=26
+D 00:41:30.0263650 Gameplay.OnPowerHistory() - powerList=28
+D 00:41:36.3058021 Gameplay.OnPowerHistory() - powerList=132
+D 00:41:53.7506506 LoadingScreen.SetTransitionAudioListener() - AudioListener (UnityEngine.AudioListener)
+D 00:41:53.7506506 LoadingScreen.OnScenePreUnload() - prevMode=GAMEPLAY nextMode=TOURNAMENT m_phase=INVALID
+D 00:41:53.9253405 Gameplay.Unload()
+D 00:41:53.9253405 LoadingScreen.OnSceneUnloaded() - prevMode=GAMEPLAY nextMode=TOURNAMENT m_phase=WAITING_FOR_SCENE_UNLOAD
+D 00:41:53.9253405 LoadingScreen.OnSceneUnloaded() - m_assetLoadEndTimestamp=5250897363564896245
+D 00:41:53.9253405 Gameplay.OnDestroy()
+D 00:41:54.4900322 Box.Awake()
+D 00:41:54.4900322 LoadingScreen.DisableTransitionUnfriendlyStuff() - TheBox(Clone) (UnityEngine.GameObject)
+D 00:41:55.5233166 LoadingScreen.OnSceneLoaded() - prevMode=GAMEPLAY currMode=TOURNAMENT
+D 00:41:55.5233166 LoadingScreen.HackWaitThenStartTransitionEffects() - START
+D 00:41:55.5233166 LoadingScreen.FadeOut()
+D 00:41:56.5686049 LoadingScreen.OnFadeOutComplete()
+D 00:41:56.5686049 LoadingScreen.FinishPreviousScene()
+D 00:41:56.5686049 LoadingScreen.ClearPreviousSceneAssets() - START m_assetLoadStartTimestamp=5250897357509860987 m_assetLoadEndTimestamp=5250897363564896245
+D 00:41:56.5686049 LoadingScreen.ClearPreviousSceneAssets() - END m_assetLoadStartTimestamp=5250897363564896245 m_assetLoadEndTimestamp=0
+D 00:41:56.5686049 LoadingScreen.FadeIn()
+D 00:41:57.6471269 LoadingScreen.OnFadeInComplete()
+D 00:42:08.3682403 LoadingScreen.SetTransitionAudioListener() - AudioListener (UnityEngine.AudioListener)
+D 00:42:08.3937814 LoadingScreen.OnScenePreUnload() - prevMode=TOURNAMENT nextMode=GAMEPLAY m_phase=INVALID
+D 00:42:08.3937814 LoadingScreen.OnSceneUnloaded() - prevMode=TOURNAMENT nextMode=GAMEPLAY m_phase=WAITING_FOR_SCENE_UNLOAD
+D 00:42:08.3937814 LoadingScreen.OnSceneUnloaded() - m_assetLoadEndTimestamp=5250897363711326422
+D 00:42:08.3937814 Box.OnDestroy()
+D 00:42:08.3937814 LoadingScreen.SetAssetLoadStartTimestamp() - m_assetLoadStartTimestamp=0
+D 00:42:08.5043841 Gameplay.Awake()
+D 00:42:08.5043841 Gameplay.Start()
+D 00:42:09.2991024 Gameplay.OnPowerHistory() - powerList=213
+D 00:42:09.3198275 Gameplay.OnPowerHistory() - powerList=3
+D 00:42:09.3422964 Gameplay.OnEntityChoices() - id=1
+D 00:42:09.3604625 Gameplay.OnPowerHistory() - powerList=1
+D 00:42:09.3813002 Gameplay.OnEntityChoices() - id=2
+D 00:42:09.5092210 LoadingScreen.DisableTransitionUnfriendlyStuff() - DRG(Clone) (UnityEngine.GameObject)
+D 00:42:09.5429038 LoadingScreen.DisableTransitionUnfriendlyStuff() - BoardCameras(Clone) (UnityEngine.GameObject)
+D 00:42:09.7063062 LoadingScreen.DisableTransitionUnfriendlyStuff() - BoardStandardGame(Clone) (UnityEngine.GameObject)
+D 00:42:09.7830518 MulliganManager.HandleGameStart() - IsPastBeginPhase()=False
+D 00:42:09.7830518 MulliganManager.WaitForHeroesAndStartAnimations()
+D 00:42:09.7830518 MulliganManager.HandleGameStart() - IsMulliganPhase()=False

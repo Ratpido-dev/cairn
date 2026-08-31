@@ -1,0 +1,99 @@
+COLLECTE DES PARTIES HEARTHSTONE  —  pour Windows
+==================================================
+
+Merci ! Tes parties servent à tester un tracker Hearthstone qui tourne
+sous Linux. Tu n'as rien à installer : tout est déjà dans Windows.
+
+
+CE QU'IL FAUT SAVOIR AVANT
+--------------------------
+
+Hearthstone ne garde que quelques dossiers de journaux, et efface les plus
+anciens tout seul. Ce qui n'est pas copié dans la journée est perdu — d'où
+ce script, qui prend une copie de côté au fur et à mesure.
+
+Il ne copie que deux fichiers par session de jeu :
+
+    Power.log    le déroulé des parties
+    Decks.log    le nom de tes decks et leur code
+
+Il ne touche ni au jeu, ni à ta collection, ni à ton compte. Il ne lit
+rien d'autre, et n'envoie rien nulle part : les fichiers restent chez toi
+tant que tu ne les envoies pas toi-même.
+
+
+INSTALLATION — UNE SEULE FOIS
+-----------------------------
+
+1. Pose ce dossier où tu veux (le Bureau fait très bien l'affaire).
+
+2. Double-clique sur   Installer-la-collecte-auto.bat
+
+   Si Windows refuse : clic droit dessus > « Exécuter en tant
+   qu'administrateur ».
+
+   C'est tout, et c'est définitif : à partir de là la copie se fait toute
+   seule, sans fenêtre et sans rien te demander.
+
+   ET APRÈS UN REDÉMARRAGE ? Rien à refaire. La tâche se relance à chaque
+   ouverture de session Windows, puis toutes les 20 minutes. Elle marche
+   aussi sur batterie, et rattrape ce qu'elle a manqué pendant que le PC
+   était éteint. Tu peux oublier ce dossier.
+
+3. Vérifie que tout est en place : double-clique sur
+   Verifier-que-ca-marche.bat. Il doit dire « Tâche installée », montrer
+   TON compte Windows, et le dossier où les parties atterrissent.
+
+   Si tu as dû installer en tant qu'administrateur, ce contrôle est
+   important : il confirme que la collecte tourne bien sous ton compte
+   de joueur et pas sous celui de l'administrateur.
+
+
+OÙ ATTERRISSENT LES PARTIES
+---------------------------
+
+    Documents\cairn-parties\
+
+Un fichier .zip par session de jeu, environ 0,5 Mo chacun (les journaux
+se compressent très bien). Même en jouant beaucoup, ça reste quelques
+dizaines de Mo par mois.
+
+
+CE QU'IL FAUT FAIRE, DE TEMPS EN TEMPS
+--------------------------------------
+
+Envoie le contenu de   Documents\cairn-parties\   par le moyen que tu veux
+(clé USB, Drive, WeTransfer, Discord…). Tu peux tout envoyer d'un coup :
+les doublons sont détectés à l'arrivée.
+
+Une fois envoyés, tu peux supprimer les .zip si la place te manque.
+
+
+SI ÇA NE MARCHE PAS
+-------------------
+
+« Dossier Logs de Hearthstone introuvable »
+    Le jeu n'est pas là où le script le cherche. Trouve le dossier qui
+    contient Hearthstone.exe, puis lance en ligne de commande :
+
+        .\cairn-collecte.ps1 -LogsPath "D:\ton\chemin\Hearthstone\Logs"
+
+« aucune partie » à l'arrivée
+    Les journaux détaillés du jeu ne sont pas activés. Firestone les
+    active tout seul — s'il est installé et qu'il a tourné au moins une
+    fois, c'est bon. Sinon, redémarre Hearthstone une fois avec Firestone
+    ouvert.
+
+Voir ce que ferait le script sans rien écrire :
+
+        .\cairn-collecte.ps1 -Liste
+
+
+POUR TOUT ARRÊTER
+-----------------
+
+Double-clique sur   Desinstaller-la-collecte-auto.bat
+
+Puis supprime le dossier si tu veux. Tes parties déjà archivées restent
+dans Documents\cairn-parties : rien n'est supprimé. Aucune autre trace
+n'aura été laissée sur ta machine.

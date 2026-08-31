@@ -1,0 +1,29 @@
+name = "cairn-collecte"
+main = "src/worker.js"
+# À remonter quand tu mets Wrangler à jour ; rien ici n'en dépend finement.
+compatibility_date = "2026-01-01"
+
+# Dépôt des archives. Créer le bucket d'abord :
+#     wrangler r2 bucket create cairn-parties
+[[r2_buckets]]
+binding = "PARTIES"
+bucket_name = "cairn-parties"
+
+# Quota par installation. FACULTATIF : sans ce bloc, le worker fonctionne, le
+# quota est simplement inactif. Créer l'espace et recopier l'identifiant rendu :
+#     wrangler kv namespace create QUOTAS
+[[kv_namespaces]]
+binding = "QUOTAS"
+id = "fb7d6d46463c4fc4bb31d2169efe392d"
+
+# Corpus ouvert en lecture. « oui » = n'importe qui peut lister et
+# retélécharger les parties déposées (`GET /parties`) ; toute autre valeur, ou
+# l'absence de ce bloc, rend le dépôt à l'écriture seule. Voir la section
+# « Pourquoi le corpus est ouvert » de ../README.md avant de le fermer : ce
+# n'est pas une question de sécurité — ce qui arrive ici est déjà
+# pseudonymisé — mais du marché qu'on propose aux joueurs.
+[vars]
+OUVERT = "oui"
+
+[observability]
+enabled = true
