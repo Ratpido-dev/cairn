@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cairn-tracker"
 version = "1.0.0"
-description = "Tracker Hearthstone natif Linux, léger, qui lit les journaux du jeu sans Wine"
+description = "Native Linux Hearthstone tracker: lightweight, reads the game's own logs, no Wine"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Ratpido" }]
@@ -22,8 +22,8 @@ classifiers = [
 dependencies = ["PySide6>=6.5"]
 
 [project.urls]
-Homepage = "https://github.com/ratpido/cairn"
-Issues = "https://github.com/ratpido/cairn/issues"
+Homepage = "https://github.com/Ratpido-dev/cairn"
+Issues = "https://github.com/Ratpido-dev/cairn/issues"
 
 [project.scripts]
 cairn = "cairn.app:main"

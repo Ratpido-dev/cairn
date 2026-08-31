@@ -1,365 +1,350 @@
 # Cairn
 
-**Le tracker Hearthstone qui tourne *nativement* sous Linux.** Pas d'Electron, pas
-d'Overwolf, pas de Wine côté tracker : Cairn lit les journaux que le jeu écrit
-lui-même, depuis Linux, en **~170 Mo de mémoire privée / 260 Mo de RSS** — mesurés,
-dix fenêtres ouvertes et une partie complète chargée. Comptez davantage après une
-longue session. À titre de comparaison, Firestone sous Wine tourne autour de 4 Go.
+**The Hearthstone tracker that runs *natively* on Linux.** No Electron, no Overwolf, no
+Wine on the tracker's side: Cairn reads the logs the game writes on its own, from Linux,
+in **~170 MB of private memory / 260 MB RSS** — measured, with ten windows open and a
+full game loaded. Expect more after a long session. For comparison, Firestone under Wine
+sits around 4 GB.
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Qt](https://img.shields.io/badge/PySide6-Qt%20Quick-41CD52?logo=qt&logoColor=white)
-[![tests](https://github.com/ratpido/cairn/actions/workflows/tests.yml/badge.svg)](https://github.com/ratpido/cairn/actions/workflows/tests.yml)
-![Tests](https://img.shields.io/badge/tests-385%20verts-10B981)
-![Licence](https://img.shields.io/badge/licence-MIT-F59E0B)
-![Plateforme](https://img.shields.io/badge/Linux-Wayland%20%7C%20X11-0B0F17?logo=linux&logoColor=white)
+[![tests](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml/badge.svg)](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml)
+![Tests](https://img.shields.io/badge/tests-386%20passing-10B981)
+![License](https://img.shields.io/badge/license-MIT-F59E0B)
+![Platform](https://img.shields.io/badge/Linux-Wayland%20%7C%20X11-0B0F17?logo=linux&logoColor=white)
 
-> **In English** — Cairn is a Hearthstone deck tracker built *for* Linux, not ported to
-> it. Every other tracker either runs under Wine (HDT) or ships a browser engine
-> (Firestone/Overwolf); both cost over a gigabyte of RAM on a machine that is already
-> running the game under Wine. Cairn parses the game's own `Power.log` from the Wine
-> prefix, in Python, and draws its overlay with Qt Quick — ~170 MB of private
-> memory, no injection, no memory reading, no telemetry. It also solves the two problems that
-> make Linux tracking hard: Hearthstone's 10 MB log cap (which kills log tailing under
-> Wine) and Wayland's refusal to let a client place its own windows. The interface is
-> bilingual FR/EN; this README is in French.
+**English** · [Français](README.fr.md)
 
 <p align="center">
-  <img src="docs/captures/apercu-panneau-deck.png" alt="Panneau du deck" height="420">
-  <img src="docs/captures/apercu-panneau-adversaire.png" alt="Panneau adversaire" height="420">
-  <img src="docs/captures/apercu-compteurs.png" alt="Compteurs contextuels" height="130">
+  <img src="docs/captures/apercu-panneau-deck.png" alt="Deck panel" height="420">
+  <img src="docs/captures/apercu-panneau-adversaire.png" alt="Opponent panel" height="420">
+  <img src="docs/captures/apercu-compteurs.png" alt="Contextual counters" height="130">
 </p>
 
 ---
 
-## Pourquoi celui-ci plutôt qu'un autre
+## Why this one rather than another
 
-Il existe d'excellents trackers Hearthstone. Aucun n'est pensé pour Linux.
+There are excellent Hearthstone trackers. None of them is designed for Linux.
 
 | | Cairn | HDT | Firestone |
 |---|---|---|---|
-| Plateforme | **Linux natif** | Windows (via Wine) | Windows / Overwolf (via Wine) |
-| Mémoire mesurée ici | **~170 Mo privé** | non mesuré | **1,5 à 4,2 Go** |
-| Deuxième prefix Wine à faire tourner | **non** | oui | oui |
-| Lecture mémoire du jeu / injection | **non** | oui | oui |
-| Règles de fenêtres Wayland fournies | **oui** | non | non |
-| Compte, télémétrie | **aucun** | optionnels | oui |
+| Platform | **native Linux** | Windows (via Wine) | Windows / Overwolf (via Wine) |
+| Memory measured here | **~170 MB private** | not measured | **1.5 to 4.2 GB** |
+| Second Wine prefix to run | **no** | yes | yes |
+| Reads game memory / injects | **no** | yes | yes |
+| Ships Wayland window rules | **yes** | no | no |
+| Account, telemetry | **none** | optional | yes |
 
-Faire tourner un tracker Windows sous Wine, à côté d'un Hearthstone qui tourne déjà
-sous Wine, c'est payer deux fois. Sur un portable à 8 Go, Firestone provoquait chez moi
-des **OOM kills du jeu lui-même** : c'est ce qui a fait naître ce projet.
+Running a Windows tracker under Wine, next to a Hearthstone that already runs under
+Wine, means paying twice. On an 8 GB laptop, Firestone caused **OOM kills of the game
+itself** on my machine: that is what started this project.
 
-Cairn ne parle jamais au jeu. Il lit un fichier texte que Hearthstone écrit de son
-plein gré, et affiche ce qu'il y trouve. Rien à injecter, rien à contourner, rien qui
-puisse casser à la prochaine mise à jour de Blizzard.
+Cairn never talks to the game. It reads a text file Hearthstone writes of its own
+accord, and displays what it finds there. Nothing to inject, nothing to work around,
+nothing that can break at Blizzard's next update.
 
-## Ce qu'il faut pour que ça marche sous Linux — et que personne ne dit
+## What it takes to work on Linux — and what nobody tells you
 
-Deux obstacles rendent le suivi de partie difficile sous Linux. Ils sont résolus.
+Two obstacles make game tracking hard on Linux. Both are solved.
 
-**1. Hearthstone plafonne ses journaux à 10 Mo.** Au-delà, il écrit `Truncating log…`
-puis **ferme le descripteur**. Sous Windows il recrée le fichier et continue ; sous Wine
-cette étape échoue et le suivi devient définitivement aveugle — en général au milieu de
-ta troisième partie. La solution tient en une ligne, `FileSizeLimit.Int=-1` dans le
-`client.config` du dossier d'installation, et Cairn la pose tout seul (bouton du
-launcher, ou `cairn-doctor --fix`).
+**1. Hearthstone caps its logs at 10 MB.** Past that, it writes `Truncating log…` and
+then **closes the file descriptor**. On Windows it recreates the file and carries on;
+under Wine that step fails and tracking goes permanently blind — usually in the middle
+of your third game. The fix is a single line, `FileSizeLimit.Int=-1` in the
+`client.config` of the install folder, and Cairn writes it for you (launcher button, or
+`cairn-doctor --fix`).
 
-**2. Sous Wayland, un client ne peut pas se placer lui-même.** Les coordonnées sont
-ignorées, le compositeur pose tout au centre. Cairn installe des règles KWin
-`cairn-pos-*` en mode *Remember*, une par widget, et surtout une règle `layer=overlay`
-— la seule couche qui passe **au-dessus d'un jeu en plein écran exclusif**. Sur les
-autres bureaux, les fenêtres portent des titres stables et l'app_id `cairn` : de quoi
-les cibler dans GNOME Extensions, Hyprland, Sway ou `wmctrl`.
+**2. Under Wayland, a client cannot place itself.** Coordinates are ignored and the
+compositor centers everything. Cairn installs KWin rules `cairn-pos-*` in *Remember*
+mode, one per widget, and above all a `layer=overlay` rule — the only layer that draws
+**on top of an exclusive-fullscreen game**. On other desktops, the windows carry stable
+titles and the app_id `cairn`: enough to target them from GNOME Extensions, Hyprland,
+Sway or `wmctrl`.
 
 ## Installation
 
 ```bash
-git clone https://github.com/ratpido/cairn.git
+git clone https://github.com/Ratpido-dev/cairn.git
 cd cairn
-./install.sh            # --desktop pour une icône sur le bureau
+./install.sh            # --desktop for a desktop icon
 ```
 
-Aucun `sudo`, aucun paquet système : tout va dans `~/.local`, selon la norme XDG. Le
-script crée un environnement Python isolé, télécharge la base de cartes, configure
-Hearthstone (journaux + plafond de taille) et pose le raccourci. Ensuite, **Cairn** est
-dans le menu d'applications.
+No `sudo`, no system package: everything goes into `~/.local`, following the XDG spec.
+The script creates an isolated Python environment, downloads the card database,
+configures Hearthstone (logging + size cap) and installs the shortcut. **Cairn** is then
+in your application menu.
 
-Prérequis : Python ≥ 3.10 et son module `venv` (`python3-venv` sur Debian/Ubuntu,
-`python3-virtualenv` sur Fedora, inclus dans `python` sur Arch). PySide6 apporte Qt
-tout seul.
+Requirements: Python ≥ 3.10 and its `venv` module (`python3-venv` on Debian/Ubuntu,
+`python3-virtualenv` on Fedora, bundled with `python` on Arch). PySide6 brings Qt along
+by itself.
 
 ```bash
-cairn                   # le tracker
-cairn-doctor [--fix]    # diagnostic complet de l'installation
-cairn-cards --check     # la base de cartes est-elle à jour ?
-./install.sh --uninstall  # tes parties et réglages sont conservés
+cairn                   # the tracker
+cairn-doctor [--fix]    # full diagnosis of the installation
+cairn-cards --check     # is the card database up to date?
+./install.sh --uninstall  # your games and settings are kept
 ```
 
-Le prefix Wine/Proton est **détecté** (Lutris, Steam/Proton, Heroic, Bottles,
-PlayOnLinux, wine nu). En cas de doute : `export CAIRN_HS_PREFIX=/chemin/vers/le/prefix`.
+The Wine/Proton prefix is **detected** (Lutris, Steam/Proton, Heroic, Bottles,
+PlayOnLinux, plain wine). If in doubt: `export CAIRN_HS_PREFIX=/path/to/the/prefix`.
 
-## Ce que Cairn montre
+## What Cairn shows
 
 <p align="center">
   <img src="docs/captures/apercu-launcher.png" alt="Launcher" width="460">
 </p>
 
-**Le deck qui vit.** Restantes, piochées, probabilité de pioche — et surtout **ce qui
-entre** dans le deck en cours de partie : bombes, fléaux, cadeaux de Rafaam, copies
-d'Azalina. Chaque ligne porte l'illustration de sa carte.
+**A deck that stays alive.** Remaining, drawn, draw odds — and above all **what enters**
+the deck mid-game: bombs, plagues, Rafaam's gifts, Azalina's copies. Every row carries
+its card's artwork.
 
-**Haut et fond de deck.** Hearthstone ne journalise pas l'ordre du deck : toute carte
-qui y entre reçoit `ZONE_POSITION value=0`. La seule façon de savoir qu'une carte est au
-fond, c'est de connaître l'effet qui l'y a mise — Cairn le déduit du **texte** des
-cartes au téléchargement, donc sans liste à maintenir à chaque extension.
+**Top and bottom of deck.** Hearthstone does not log deck order: every card that enters
+it gets `ZONE_POSITION value=0`. The only way to know a card sits at the bottom is to
+know the effect that put it there — Cairn infers this from the cards' **text** at
+download time, so there is no per-expansion list to maintain.
 
-**Des compteurs qui n'apparaissent que s'ils servent.** Rafaam, cadavres, dragons de
-Zarimi, cycle de sorts de Yogg — un compteur ne s'affiche que si la carte qui le
-justifie a été vue, ou si la classe adverse peut la jouer. Et ils sont **symétriques** :
-quand Azalina copie le début de partie d'en face, le compteur apparaît aussi de ton côté.
+**Counters that only appear when they matter.** Rafaam, corpses, Zarimi's dragons,
+Yogg's spell cycle — a counter shows up only if the card justifying it has been seen, or
+if the opposing class could play it. And they are **symmetric**: when Azalina copies the
+other side's opening, the counter appears on your side too.
 
-**L'Atlas de Godfrey**, la file des cartes surpiochées dans l'ordre où elles
-reviendront, à leur coût réduit, des deux côtés. **Les pools de résurrection** au
-survol : ce qu'une carte peut *réellement* ramener, pas la liste théorique. **La main
-adverse** avec le tour d'arrivée et l'origine de chaque carte. **Les candidats secrets**
-de la classe du secret posé — pas du héros adverse, ce n'est pas la même chose.
+**Godfrey's Atlas**, the queue of overdrawn cards in the order they will come back, at
+their reduced cost, on both sides. **Resurrection pools** on hover: what a card can
+*actually* bring back, not the theoretical list. **The opponent's hand**, with the turn
+each card arrived and where it came from. **Secret candidates** for the class of the
+secret that was played — not the opposing hero's class, which is not the same thing.
 
-Plus : chrono de partie et de tour, temps de réflexion par joueur, dégâts possibles de
-chaque camp (mal d'invocation compris), import automatique des decks depuis `Decks.log`,
-historique et winrates locaux par deck et par classe.
+Plus: game and turn timers, thinking time per player, potential damage on each side
+(summoning sickness included), automatic deck import from `Decks.log`, local history and
+winrates per deck and per class.
 
 <p align="center">
-  <img src="docs/captures/apercu-widgets.png" alt="Widgets flottants : compteurs, chrono, dégâts possibles, main adverse" width="420">
+  <img src="docs/captures/apercu-widgets.png" alt="Floating widgets: counters, timer, potential damage, opponent's hand" width="420">
 </p>
 
-## Ton winrate contre *ce deck-là*, pas contre sa classe
+## Your winrate against *that deck*, not against its class
 
-Un taux de victoire par classe mélange des decks qui n'ont rien à voir. Mesuré sur mes
-propres archives : **39 % face au Démoniste en moyenne — mais 29 % contre un Rafaam et
-75 % contre le reste.** La moyenne par classe cachait deux matchups opposés, et c'est
-exactement l'information qui manquait.
+A per-class win rate mixes together decks that have nothing in common. Measured on my
+own archives: **39% against Warlock on average — but 29% against a Rafaam deck and 75%
+against the rest.** The class average hid two opposite matchups, and that is exactly the
+information that was missing.
 
-Cairn reconnaît donc l'archétype d'en face pendant la partie, et tient les statistiques
-par archétype. Deux mécanismes, du plus fort au plus faible :
+So Cairn identifies the opposing archetype during the game, and keeps statistics per
+archetype. Two mechanisms, strongest first:
 
-- **les listes de référence que tu colles.** Tu donnes un code de deck, Cairn le décode
-  et compare toutes les cartes vues sortir du deck adverse à toutes les listes connues
-  de sa classe. Sept cartes banales qui figurent toutes dans la même liste valent une
-  signature ;
-- **les cartes-signatures câblées**, en repli, quand aucune liste de cette classe n'est
-  connue.
+- **the reference lists you paste.** You give it a deck code, Cairn decodes it and
+  compares every card seen leaving the opponent's deck against every known list for that
+  class. Seven unremarkable cards that all appear in the same list amount to a
+  signature;
+- **hard-coded signature cards**, as a fallback, when no list is known for that class.
 
-**82 % des parties archivées reçoivent une étiquette, et 0 % de faux positifs** sur
-6 000 tirages simulés. Trois partis pris expliquent ces chiffres :
+**82% of archived games get a label, and 0% false positives** over 6,000 simulated
+draws. Three deliberate choices explain those numbers:
 
-1. **L'étiquette est la carte-signature ou le nom de la liste collée, jamais un nom
-   d'archétype du méta.** « Démoniste · Rafaam », pas « Rafaamlock » : c'est vérifiable,
-   ça ne périme pas au patch suivant et ça ne demande aucune veille.
-2. **Une carte créée ne prouve rien.** Un Rafaam obtenu par Découverte ne fait pas un
-   deck Rafaam — sinon un Prêtre voleur, qui joue les cartes des autres, serait catalogué
-   dans l'archétype de sa victime.
-3. **Sans preuve, « inconnu ».** Un adversaire qui concède au tour 2 n'a rien montré : il
-   compte dans sa classe, pas dans un archétype. Deviner fausserait le seul chiffre qu'on
-   cherche.
+1. **The label is the signature card or the name of the pasted list, never a meta
+   archetype name.** "Warlock · Rafaam", not "Rafaamlock": it is verifiable, it does not
+   go stale at the next patch, and it requires following no meta reports.
+2. **A generated card proves nothing.** A Rafaam obtained from a Discover does not make
+   a Rafaam deck — otherwise a Thief Priest, who plays other people's cards, would be
+   filed under its victim's archetype.
+3. **No proof means "unknown".** An opponent who concedes on turn 2 has shown nothing:
+   they count toward their class, not toward an archetype. Guessing would corrupt the
+   one number we are after.
 
-Rien n'est scrapé : HSGuru interdit explicitement les agents automatiques, et dépendre
-d'un site tiers aurait fait cesser Cairn de fonctionner le jour où sa page change. Coller
-un code marche hors ligne et te laisse choisir quand rafraîchir.
+Nothing is scraped: HSGuru explicitly forbids automated agents, and depending on a
+third-party site would have made Cairn stop working the day their page changed. Pasting
+a code works offline and lets you choose when to refresh.
 
-## Regarder, et lancer
+## Spectating, and launching
 
-**Mode spectateur.** Hearthstone journalise une partie regardée exactement comme les
-tiennes — même format, mêmes tags, les deux mains révélées. Sans garde-fou, elles
-entraient donc dans ton historique et faussaient tes winrates. Cairn apprend tout seul
-ton identifiant de compte, reconnaît les parties où tu n'es aucun des deux joueurs,
-**les affiche mais ne les enregistre pas**.
+**Spectator mode.** Hearthstone logs a spectated game exactly like your own — same
+format, same tags, both hands revealed. Without a guard, those games entered your
+history and skewed your winrates. Cairn learns your account id on its own, recognises
+the games where you are neither player, and **displays them without recording them**.
 
-**Lancer le jeu depuis le launcher.** Il n'existe pas une façon de lancer Hearthstone
-sous Linux, alors Cairn ne cherche pas un jeu qui *s'appelle* Hearthstone : il cherche
-celui qui **habite le prefix qu'il surveille déjà**. Lutris et les entrées `.desktop`
-sont reconnus ainsi ; pour un script maison, un `umu-run` bricolé ou Bottles, le champ
-« commande de lancement » du launcher gagne toujours. Un raccourci pour les cas
-courants, un mécanisme manuel pour tous les autres.
+**Launching the game from the launcher.** There is no single way to launch Hearthstone
+on Linux, so Cairn does not look for a game *called* Hearthstone: it looks for the one
+that **lives in the prefix it already watches**. Lutris and `.desktop` entries are found
+that way; for a homemade script, a hand-rolled `umu-run` or Bottles, the launcher's
+"launch command" field always wins. A shortcut for the common cases, a manual mechanism
+for all the others.
 
-## Il ne périme pas tout seul
+## It does not go stale in silence
 
-Un patch d'équilibrage change les coûts et les effets. Un tracker qui ne s'en aperçoit
-pas affiche des mensonges — et ne le dit pas.
+A balance patch changes costs and effects. A tracker that fails to notice displays lies
+— and does not say so.
 
-À chaque lancement, Cairn compare l'empreinte HTTP de sa base de cartes à celle de
-HearthstoneJSON (une requête `HEAD`, toutes les 12 h au plus) et retélécharge si le jeu
-a été patché. Et parce qu'un patch peut changer non pas la *donnée* mais **l'effet**
-d'une carte dont le code suppose le comportement, le téléchargement compare aussi le
-texte des cartes câblées dans le moteur, et prévient quand l'une d'elles a été
-reformulée. `cairn-doctor` garde l'alerte visible jusqu'à ce qu'elle soit traitée.
+At every start, Cairn compares the HTTP fingerprint of its card database against
+HearthstoneJSON's (one `HEAD` request, at most every 12 h) and re-downloads if the game
+was patched. And because a patch can change not the *data* but the **effect** of a card
+whose behaviour the code assumes, the download also compares the text of the cards wired
+into the engine, and warns when one of them has been reworded. `cairn-doctor` keeps the
+warning visible until it has been dealt with.
 
-## Vie privée
+## Privacy
 
-Cairn ne parle à personne. Il n'y a ni compte, ni télémétrie, ni serveur : tout vit dans
-`~/.local/share/cairn`. Les seules requêtes réseau sont la base de cartes et les
-illustrations, chez HearthstoneJSON.
+Cairn talks to nobody. There is no account, no telemetry, no server: everything lives in
+`~/.local/share/cairn`. The only network requests are for the card database and the
+artwork, from HearthstoneJSON.
 
-Le partage de parties existe, mais il est **désactivé par défaut** et se pose une fois,
-explicitement. Un `Power.log` contient deux identifiants par joueur — le battletag et le
-`GameAccountId` — que le RGPD range parmi les données personnelles. Le point dur n'est
-pas l'utilisateur, qui consent pour lui-même, mais **son adversaire**, qui n'a rien
-demandé : les identifiants sont donc remplacés par des jetons stables, salés par
-installation, avant tout départ. Un test vérifie qu'une partie pseudonymisée **se rejoue
-à l'identique** — la protection ne coûte rien, c'est ce qui la rend tenable.
+Game sharing exists, but it is **off by default** and asked once, explicitly. A
+`Power.log` contains two identifiers per player — the battletag and the `GameAccountId`
+— which the GDPR counts as personal data. The hard part is not the user, who consents
+for themselves, but **their opponent**, who never asked for any of this: identifiers are
+therefore replaced with stable tokens, salted per installation, before anything leaves.
+A test verifies that a pseudonymised game **replays identically** — the protection costs
+nothing, which is what makes it sustainable.
 
-**Ce n'est pas un réglage.** Il n'existe aucun moyen d'envoyer un journal brut : une
-option « ne pas anonymiser » n'aurait jamais pu être cochée qu'au détriment de
-quelqu'un qui n'était pas là pour donner son avis.
+**This is not a setting.** There is no way to send a raw log: a "do not anonymise"
+option could only ever have been ticked at the expense of someone who was not there to
+have a say.
 
-Une fois le partage accepté, les parties partent toutes seules entre deux parties, en
-tâche de fond, avec reprise sur échec — jamais pendant que tu joues. Le raisonnement est
-dans [`docs/COLLECTE.md`](docs/COLLECTE.md), et le service qui les reçoit — un Cloudflare
-Worker prêt à déployer — dans [`collecte/`](collecte/).
+Once sharing is accepted, games are sent on their own between matches, in the
+background, resuming after failures — never while you are playing. The reasoning is in
+[`docs/COLLECTE.md`](docs/COLLECTE.md) (French), and the service that receives them — a
+ready-to-deploy Cloudflare Worker — in [`collecte/`](collecte/).
 
-Les parties de référence de ce dépôt sont passées par ce même anonymiseur.
+The reference games in this repository went through that same anonymiser.
 
-## Pourquoi cette option de conserver les parties existe
+## Why this opt-in to keep games exists
 
-C'est la seule fonction de Cairn qui envoie quoi que ce soit, et elle mérite donc de
-dire pourquoi elle existe plutôt que d'exister discrètement.
+It is the only feature in Cairn that sends anything anywhere, so it deserves to say why
+it exists rather than existing quietly.
 
-**Un lecteur de journaux ne se corrige que sur des parties qu'il n'a pas prévues.** Le
-parseur ne casse pas sur les cartes que j'ai testées : il casse sur l'extension sortie
-hier, sur un effet que personne n'avait croisé, sur une carte qui déplace des entités
-d'une façon inédite. Les cas les plus retors du moteur — l'Atlas de Godfrey, les copies
-d'Azalina, les cartes envoyées au fond du deck — se sont tous écrits contre de vraies
-parties, jamais contre des cas imaginés. Or je joue une classe, un format, un rang :
-mes propres parties sont un échantillon minuscule et biaisé.
+**A log parser only gets fixed by games it did not anticipate.** The parser does not
+break on the cards I tested: it breaks on the expansion that shipped yesterday, on an
+effect nobody had run into, on a card that moves entities in a way never seen before.
+The engine's nastiest cases — Godfrey's Atlas, Azalina's copies, cards sent to the
+bottom of the deck — were all written against real games, never against imagined ones.
+And I play one class, one format, one rank: my own games are a tiny, biased sample.
 
-**Il n'existe aucun corpus ouvert de parties Hearthstone.** Les données existent — les
-gros trackers en collectent depuis des années — mais elles restent chez eux. Une
-question aussi simple que « à quel tour telle carte est-elle jouée en moyenne à ce
-rang ? » n'a pas de réponse publique. Un simulateur de règles, un projet d'IA, une
-étude de méta n'ont rien sur quoi s'appuyer.
+**There is no open corpus of Hearthstone games.** The data exists — the big trackers
+have been collecting it for years — but it stays with them. A question as simple as "on
+average, on which turn is this card played at this rank?" has no public answer. A rules
+simulator, an AI project, a meta study have nothing to build on.
 
-**Rien n'oblige personne.** Le partage est refusé par défaut, la question se pose une
-fois, la réponse se change à tout moment depuis le launcher, et ce qui attendait est
-alors effacé. Cairn est strictement identique dans les deux cas : aucune fonction n'est
-réservée à ceux qui acceptent, il n'y a pas de compte, pas de classement, pas de rappel.
+**Nobody is obliged.** Sharing is off by default, the question is asked once, the answer
+can be changed at any time from the launcher, and whatever was queued is then deleted.
+Cairn is strictly identical either way: no feature is reserved for those who accept,
+there is no account, no leaderboard, no reminder.
 
-### Ce que tu y gagnes, concrètement
+### What you actually get out of it
 
-Aucune fonction n'est réservée à ceux qui acceptent — ce serait contraire à tout ce qui
-précède. Mais dire « c'est gratuit et ça ne te rapporte rien » serait faux, alors voici
-ce que ça te rend vraiment :
+No feature is reserved for those who accept — that would contradict everything above.
+But saying "it's free and gets you nothing" would be false, so here is what it actually
+gives you:
 
-**Une sauvegarde de tes parties ailleurs que sur ton disque.** Hearthstone ne garde
-qu'une poignée de dossiers de session et efface le reste sans prévenir — mesuré ici :
-**sur 239 parties jouées, 92 seulement avaient encore leur journal.** Cairn les archive
-localement, mais un disque qui lâche emporte l'archive avec le reste. Le corpus étant
-public en lecture, `tools/corpus.py --installation <ton-id>` te rend les tiennes, depuis
-n'importe quelle machine, sans compte ni mot de passe.
+**A backup of your games somewhere other than your disk.** Hearthstone keeps only a
+handful of session folders and deletes the rest without warning — measured here: **out
+of 239 games played, only 92 still had their log.** Cairn archives them locally, but a
+failing disk takes the archive down with everything else. Since the corpus is public to
+read, `tools/corpus.py --installation <your-id>` hands yours back, from any machine,
+with no account and no password.
 
-**Le tracker que tu utilises s'améliore sur des parties qu'il n'a pas prévues.** Les cas
-les plus retors du moteur — l'Atlas de Godfrey, les copies d'Azalina, les cartes envoyées
-au fond du deck — se sont tous écrits contre de vraies parties, jamais contre des cas
-imaginés. Une partie où Cairn se trompe est exactement celle qui manque pour le corriger,
-et la correction te revient à la mise à jour suivante. Toi tu joues une classe, un format,
-un rang : à plusieurs, l'échantillon cesse d'être minuscule.
+**The tracker you use improves on games it did not anticipate.** The engine's nastiest
+cases — Godfrey's Atlas, Azalina's copies, cards sent to the bottom of the deck — were
+all written against real games, never against imagined ones. A game where Cairn gets it
+wrong is exactly the one needed to fix it, and the fix comes back to you at the next
+update. You play one class, one format, one rank: together, the sample stops being tiny.
 
-**L'accès à la donnée, au lieu de la fournir gratuitement à quelqu'un d'autre.** C'est la
-différence de fond avec les trackers propriétaires : eux aussi collectent tes parties, mais
-tu ne les revois jamais. Ici le corpus se télécharge en entier, par n'importe qui, sans
-clé. Une question comme « à quel tour telle carte est-elle jouée en moyenne à ce rang ? »
-n'a aujourd'hui **aucune réponse publique** — c'est ce qui manque à un simulateur de
-règles, à un projet d'IA ou à une étude de méta, et c'est exactement ce qu'un corpus ouvert
-débloque.
+**Access to the data, instead of handing it to someone else for free.** This is the deep
+difference with proprietary trackers: they collect your games too, but you never see
+them again. Here the corpus downloads whole, by anyone, without a key. A question like
+"on average, on which turn is this card played at this rank?" today has **no public
+answer** — that is what a rules simulator, an AI project or a meta study is missing, and
+that is exactly what an open corpus unlocks.
 
-**Et ça ne te coûte rien de visible.** Environ 500 Ko par session, envoyés en tâche de
-fond entre deux parties — jamais pendant que tu joues. Pas de compte, pas de classement,
-pas de rappel. Tu changes d'avis quand tu veux depuis le launcher, et ce qui attendait est
-effacé.
+**And it costs you nothing visible.** About 500 KB per session, sent in the background
+between games — never while you play. No account, no leaderboard, no reminder. You
+change your mind whenever you want from the launcher, and whatever was queued is
+deleted.
 
-Le seul vrai coût est écrit plus bas, et il est définitif : **ce qui est publié ne se
-reprend pas.** C'est pour ça que la pseudonymisation n'est pas une option.
+The one real cost is written below, and it is final: **what is published cannot be taken
+back.** That is why pseudonymisation is not optional.
 
-### Pourquoi le corpus est ouvert
+### Why the corpus is open
 
-Le point de collecte **sert ce qu'il a reçu**, à qui le demande, sans compte ni clé :
+The collection point **serves what it received**, to whoever asks, with no account and
+no key:
 
 ```bash
-curl https://<collecte>/parties                       # l'index, en JSON
-python tools/corpus.py --url https://<collecte> --extraire   # tout, déballé
+curl https://<collect>/parties                         # the index, as JSON
+python tools/corpus.py --url https://<collect> --extraire   # everything, unpacked
 ```
 
-Ce n'était pas le cas au départ — le dépôt était en écriture seule — et le
-raisonnement qui a fait changer d'avis tient en une phrase : **garder ce corpus fermé
-n'aurait protégé personne.** Ce qui arrive là-bas est déjà pseudonymisé sur la machine
-du joueur, inconditionnellement ; il n'y a plus rien à protéger une fois que c'est
-parti. Un dépôt fermé n'aurait donc rien ajouté à la vie privée de qui que ce soit — il
-aurait seulement demandé aux joueurs de donner leurs parties **à quelqu'un** plutôt
-qu'à tout le monde. C'est exactement le marché que les autres trackers proposent déjà,
-et c'est précisément ce que ce projet n'a pas envie de refaire.
+This was not the case at first — the endpoint was write-only — and the reasoning that
+changed my mind fits in one sentence: **keeping this corpus closed would have protected
+nobody.** What arrives there is already pseudonymised on the player's machine,
+unconditionally; there is nothing left to protect once it has left. A closed endpoint
+would therefore have added nothing to anyone's privacy — it would merely have asked
+players to give their games to **someone** rather than to everyone. That is exactly the
+deal the other trackers already offer, and precisely what this project has no wish to
+repeat.
 
-Ouvert, le marché devient honnête : tu contribues à une ressource dont tu peux te
-servir. `tools/corpus.py --installation <ton-id>` te rend d'ailleurs tes propres envois :
-l'identifiant est affiché — et copiable — dans le launcher, section *Partage de
-parties*. C'est aussi lui qui permet de traiter une demande de suppression : sans lui,
-« efface mes données » serait une phrase intraitable.
+Open, the deal becomes honest: you contribute to a resource you can use.
+`tools/corpus.py --installation <your-id>` also hands back your own uploads: the id is
+displayed — and copyable — in the launcher, under *Game sharing*. It is also what makes
+a deletion request actionable: without it, "erase my data" would be an untreatable
+sentence.
 
-Deux choses à savoir avant de dire oui, parce qu'elles sont vraies :
+Two things worth knowing before saying yes, because they are true:
 
-- l'`install_id` **regroupe** les parties d'une même installation. C'est ce qui rend le
-  corpus utile — une suite de parties est plus riche qu'un tas — et c'est aussi ce qui
-  permet de dire « ces 400 parties viennent de la même personne », sans jamais pouvoir
-  dire laquelle. Le sel de pseudonymisation étant propre à chaque installation, deux
-  contributeurs ne sont jamais recoupables entre eux ;
-- **publier est irréversible dans les faits.** Un fichier téléchargé par un tiers ne se
-  reprend pas. La suppression sur demande vide le dépôt, pas les copies.
+- the `install_id` **groups** the games of a single installation. That is what makes the
+  corpus useful — a run of games is richer than a pile — and it is also what makes it
+  possible to say "these 400 games come from the same person", without ever being able
+  to say which one. Since the pseudonymisation salt is per-installation, two
+  contributors can never be cross-referenced with each other;
+- **publishing is irreversible in practice.** A file downloaded by a third party cannot
+  be recalled. Deletion on request empties the endpoint, not the copies.
 
-Contribuer ne demande d'ailleurs pas de tourner sous Linux : `tools/windows/` archive
-les sessions d'une machine Windows en tâche planifiée, avec un `LISEZ-MOI` et des
-raccourcis `.bat` pour qui ne veut pas voir un terminal.
+Contributing does not require running Linux, by the way: `tools/windows/` archives the
+sessions of a Windows machine as a scheduled task, with a README and `.bat` shortcuts for
+anyone who would rather not see a terminal.
 
-Celui qui héberge son propre point de collecte décide : `OUVERT = "oui"` dans
-[`collecte/wrangler.toml`](collecte/wrangler.toml) ouvre la lecture, toute autre valeur
-la referme.
+Whoever hosts their own collection point decides: `OUVERT = "oui"` in
+[`collecte/wrangler.toml`](collecte/wrangler.toml) opens reading, any other value closes
+it again.
 
-## Développement
+## Development
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -e . -r requirements.txt
-.venv/bin/python -m pytest                  # 385 tests
-.venv/bin/python tools/panel.py --replay    # démo sans jouer, historique jetable
-.venv/bin/python tools/screenshot.py        # captures reproductibles, hors écran
-.venv/bin/python tools/stats.py             # winrates et dernières parties
-.venv/bin/python tools/corpus.py --liste    # ce que contient le corpus public
+.venv/bin/python -m pytest                  # 386 tests
+.venv/bin/python tools/panel.py --replay    # demo without playing, throwaway history
+.venv/bin/python tools/screenshot.py        # reproducible screenshots, offscreen
+.venv/bin/python tools/stats.py             # winrates and recent games
+.venv/bin/python tools/corpus.py --liste    # what the public corpus contains
 ```
 
-Les parties de référence sont versionnées **compressées et pseudonymisées**
-(1,3 Mo au lieu de 21) et décompressées à la demande : les tests tournent sur un clone
-neuf, sans rien télécharger d'autre que la base de cartes.
+The reference games are versioned **compressed and pseudonymised** (1.3 MB instead of
+21) and decompressed on demand: the tests run on a fresh clone, downloading nothing but
+the card database.
 
-**La CI refuse de mentir.** La plupart des tests ont besoin de la base de cartes ; sans
-elle ils ne échouent pas, ils se *sautent* — 202 sur 385 — et pytest affiche quand même
-vert. Une CI qui annonce « tout va bien » après avoir exécuté 43 % de la suite est pire
-qu'une CI rouge. Le workflow télécharge donc la base avant les tests, puis
-`tools/ci_check_skips.py` relit le rapport JUnit et **échoue au-delà de 10 tests
-sautés**. Deux versions de Python, les deux bouts de l'intervalle annoncé (3.10 et 3.13).
+**The CI refuses to lie.** Most tests need the card database; without it they do not
+fail, they *skip* — 202 out of 386 — and pytest still prints green. A CI that announces
+"all is well" after running 43% of the suite is worse than a red one. So the workflow
+downloads the database before the tests, then `tools/ci_check_skips.py` reads the JUnit
+report back and **fails beyond 10 skipped tests**. Two Python versions, both ends of the
+advertised range (3.10 and 3.13).
 
-**Architecture.** `power_log.py` (tokenizer, ne lit que les lignes
-`GameState.DebugPrint(Power|Game)`) → `game_state.py` (moteur d'état) → `deck_view.py`
-(**fonction pure recalculée à chaque poll**, jamais d'état incrémental fragile) →
-`ui/bridge.py` (pont Qt) → QML. Les compteurs sont un registre déclaratif à
-déclencheurs (`counters.py`), pas une pile de `if`.
+**Architecture.** `power_log.py` (tokenizer, reads only
+`GameState.DebugPrint(Power|Game)` lines) → `game_state.py` (state machine) →
+`deck_view.py` (**a pure function recomputed at every poll**, never fragile incremental
+state) → `ui/bridge.py` (Qt bridge) → QML. The counters are a declarative registry with
+triggers (`counters.py`), not a stack of `if`s.
 
-Détails et décisions dans [`docs/CAHIER_DES_CHARGES.md`](docs/CAHIER_DES_CHARGES.md) et
-[`docs/COMPARAISON-FIRESTONE.md`](docs/COMPARAISON-FIRESTONE.md) ; l'historique des
-versions dans [`CHANGELOG.md`](CHANGELOG.md).
+Details and decisions in [`docs/CAHIER_DES_CHARGES.md`](docs/CAHIER_DES_CHARGES.md) and
+[`docs/COMPARAISON-FIRESTONE.md`](docs/COMPARAISON-FIRESTONE.md) (both in French);
+version history in [`CHANGELOG.md`](CHANGELOG.md).
 
-## Licence
+## License
 
 [MIT](LICENSE) — © 2026 Ratpido.
 
-Projet indépendant, **sans lien avec Blizzard Entertainment**. Hearthstone est une
-marque de Blizzard Entertainment, Inc. Cairn se contente de lire les journaux que le jeu
-écrit lui-même : il n'injecte rien, ne lit aucune mémoire de processus et ne modifie pas
-le jeu.
+An independent project, **not affiliated with Blizzard Entertainment**. Hearthstone is a
+trademark of Blizzard Entertainment, Inc. Cairn merely reads the logs the game writes
+itself: it injects nothing, reads no process memory and does not modify the game.
 
-Données de cartes et illustrations : [HearthstoneJSON](https://hearthstonejson.com/),
-téléchargées à la demande et non redistribuées ici. Interface bâtie sur PySide6 / Qt
-(LGPLv3).
+Card data and artwork: [HearthstoneJSON](https://hearthstonejson.com/), downloaded on
+demand and not redistributed here. Interface built on PySide6 / Qt (LGPLv3).
