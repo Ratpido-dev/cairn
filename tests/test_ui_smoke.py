@@ -344,6 +344,7 @@ def test_bouton_lancer_hs_visible_quand_le_jeu_est_arrete():
 
     import time
 
+    from src.cairn import hs_launch
     from src.cairn.app import QML_DIR
     from src.cairn.ui.bridge import TrackerBridge
     from tools.panel import FixtureReplayer
@@ -374,6 +375,21 @@ def test_bouton_lancer_hs_visible_quand_le_jeu_est_arrete():
             app.processEvents()
             time.sleep(0.05)
         assert bridge.hsLaunchResolved, "détection du lanceur jamais terminée"
+        # Même raison que pour hsRunning : le bouton n'est visible que si un
+        # lanceur a été TROUVÉ, et une machine sans Hearthstone — un runner de
+        # CI, par exemple — n'en trouve aucun. Le bouton y est alors masqué à
+        # juste titre, et le test échouait pour une raison qui n'a rien à voir
+        # avec ce qu'il vérifie. On impose donc un lanceur, une fois la
+        # résolution de fond terminée pour qu'elle ne l'écrase pas. Ce test
+        # vérifie OÙ le bouton est posé dans l'arbre ; la détection, elle, a
+        # ses propres tests dans test_hs_launch.py.
+        bridge._launch_cle = (bridge._config.hs_launch_command,
+                              str(bridge._prefix() or ""))
+        bridge._launch_cache = hs_launch.LaunchMethod(
+            source="config", label="lanceur de test", argv=["/bin/true"],
+        )
+        bridge._launch_resolu = True
+        assert bridge.canLaunchHs, "le lanceur forcé n'a pas pris"
 
         engine = QQmlApplicationEngine()
         engine.rootContext().setContextProperty("tracker", bridge)

@@ -59,7 +59,7 @@ jobs:
         run: echo "cle=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
 
       # LA raison d'être de l'étape suivante : sans la base de cartes, 202 tests
-      # sur 385 se sautent et la CI afficherait vert sans avoir rien vérifié.
+      # sur 386 se sautent et la CI afficherait vert sans avoir rien vérifié.
       # Le cache évite de retélécharger 8 Mo à chaque exécution.
       - name: Cache de la base de cartes
         uses: actions/cache@v4

@@ -4,7 +4,8 @@ Trois étages :
 
 - :class:`LogTailer` — lit un fichier qui grossit, par lectures incrémentales.
   Gère : fichier pas encore créé, dernière ligne incomplète (gardée en tampon
-  jusqu'au ``\\n``), troncature et remplacement (inode).
+  jusqu'au ``\\n``), troncature, et remplacement du fichier — par l'inode, et
+  par la tête du fichier quand le système en a recyclé l'inode.
 - :class:`LiveTracker` — surveille le dossier ``Logs/`` de HS, bascule sur la
   session la plus récente quand HS (re)démarre, et pousse les nouvelles lignes
   dans ``IncrementalParser`` → ``GameStateEngine``.
@@ -31,11 +32,17 @@ from .power_log import IncrementalParser
 class LogTailer:
     """Lecture incrémentale d'un fichier de log qui grossit."""
 
+    # Nombre de caractères de tête retenus d'un poll à l'autre. Un fichier qui
+    # grossit conserve sa tête ; un fichier recréé, non. C'est le seul signal
+    # disponible quand le système de fichiers a recyclé l'inode (cf. poll()).
+    _TAILLE_TETE = 256
+
     def __init__(self, path: Path, from_start: bool = True):
         self.path = Path(path)  # peut être redirigé après un renommage
         self._pos = 0
         self._buf = ""
         self._inode: int | None = None
+        self._tete: str = ""
         self._from_start = from_start
 
     def poll(self) -> list[str]:
@@ -54,11 +61,24 @@ class LogTailer:
             self._inode = st.st_ino
             self._pos = 0
             self._buf = ""
+            self._tete = ""
 
         if st.st_size == self._pos:
             return []
 
         with open(self.path, encoding="utf-8", errors="replace") as f:
+            tete = f.read(self._TAILLE_TETE)
+            if self._tete and not tete.startswith(self._tete):
+                # Même inode, mais la tête du fichier a changé : le journal a
+                # été recréé et le système de fichiers a recyclé l'inode du
+                # précédent — ext4 et tmpfs le font immédiatement. L'inode seul
+                # ne dit donc rien, et la taille non plus dès que le nouveau
+                # fichier a dépassé l'ancien décalage. Sans ce garde-fou, on
+                # relit le nouveau journal depuis le décalage de l'ancien et on
+                # perd silencieusement son début.
+                self._pos = 0
+                self._buf = ""
+            self._tete = tete
             f.seek(self._pos)
             chunk = f.read()
             self._pos = f.tell()

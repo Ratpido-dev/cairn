@@ -33,9 +33,7 @@ def test_tailer_ligne_partielle_gardee_en_tampon(tmp_path):
 
 
 def test_tailer_fichier_remplace_repart_du_debut(tmp_path):
-    # Cas réel HS : le fichier est recréé (nouvel inode), jamais réécrit en
-    # place. (Limite assumée : une troncature en place vers un contenu PLUS
-    # LONG entre deux polls serait invisible — scénario qui n'existe pas ici.)
+    # Cas réel HS : le fichier est recréé, jamais réécrit en place.
     path = tmp_path / "Power.log"
     path.write_text("a\nb\n")
     tailer = LogTailer(path)
@@ -43,6 +41,33 @@ def test_tailer_fichier_remplace_repart_du_debut(tmp_path):
     path.unlink()
     path.write_text("nouveau\n")
     assert tailer.poll() == ["nouveau"]
+
+
+def test_tailer_fichier_remplace_avec_inode_recycle(tmp_path):
+    """Journal recréé alors que le système a RECYCLÉ l'inode du précédent.
+
+    Ce cas a fait rougir la CI sans jamais échouer en local : ext4 et tmpfs
+    réattribuent l'inode libéré immédiatement, si bien que le fichier neuf
+    porte celui de l'ancien. La taille ne trahit rien non plus dès que le
+    nouveau journal a dépassé l'ancien décalage — le tailer relisait donc le
+    nouveau fichier depuis le décalage de l'ancien et rendait « eau » pour
+    « nouveau », en perdant le début de la session.
+
+    On reproduit la situation de façon déterministe, sans dépendre du système
+    de fichiers : réécriture EN PLACE (même inode) d'un contenu PLUS LONG.
+    Seule la tête du fichier peut alors révéler le remplacement.
+    """
+    path = tmp_path / "Power.log"
+    path.write_text("a\nb\n")
+    tailer = LogTailer(path)
+    tailer.poll()
+
+    inode = path.stat().st_ino
+    path.write_text("nouveau journal\n")   # mode « w » : tronque en place
+    assert path.stat().st_ino == inode, "sans inode identique, le test ne teste rien"
+    assert path.stat().st_size > 4, "le test suppose un contenu plus long qu'avant"
+
+    assert tailer.poll() == ["nouveau journal"]
 
 
 def test_tailer_troncature_plus_courte_detectee(tmp_path):

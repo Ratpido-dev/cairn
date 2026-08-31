@@ -15,7 +15,7 @@
 | **Machine cible** | Portable Linux modeste — i5 mobile, iGPU, 8 Go de RAM, KDE Wayland |
 | **Motivation** | Firestone tourne sous Wine mais coûte ~1,5 Go de RAM (6 process Electron) → OOM kill de Hearthstone vécu le 31/07/2026. Un tracker natif fait le cœur du travail pour **< 200 Mo**. |
 | **Cadre honnête** | Un **tracker de partie**, PAS une parité Firestone (pas de méta serveur, pas de simulateur BG) |
-| **Statut** | **v1.0.0 publiée** — 385 tests, ~170 Mo de mémoire privée. Le détail des étapes qui y ont mené est conservé plus bas, à titre de journal. |
+| **Statut** | **v1.0.0 publiée** — 386 tests, ~170 Mo de mémoire privée. Le détail des étapes qui y ont mené est conservé plus bas, à titre de journal. |
 
 ---
 

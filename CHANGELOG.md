@@ -8,7 +8,7 @@ change **pour qui utilise Cairn** ; le détail des décisions est dans
 
 Première version publique. Un tracker Hearthstone **natif Linux** : il lit les journaux
 que le jeu écrit lui-même depuis le prefix Wine, sans second prefix, sans injection et
-sans lecture mémoire. 385 tests, mesuré à ~170 Mo de mémoire privée.
+sans lecture mémoire. 386 tests, mesuré à ~170 Mo de mémoire privée.
 
 ### Suivi de partie
 
