@@ -86,3 +86,51 @@ def test_lignes_non_gamestate_ignorees():
         "E 11:39:14.0 PowerProcessor.BuildTaskList(): Hit a SUB_SPELL_END task",
         "n'importe quoi",
     ) == []
+
+
+# ---- modes sans deck : traversés sans être analysés ------------------------
+
+_G = "D 00:00:00.0000000 GameState.DebugPrintPower() - "
+_INFO = "D 00:00:00.0000000 GameState.DebugPrintGame() - "
+_TASK = "D 00:00:00.0000000 PowerTaskList.DebugPrintPower() -     "
+
+
+def test_partie_sans_deck_traversee_sans_etre_analysee():
+    """Une partie de Champ de bataille pèse ~86 Mo là où une classée en pèse 5.
+    Elle est ignorée partout en aval : l'analyser est du travail pur perte."""
+    events = list(parse_lines([
+        _G + "CREATE_GAME",
+        _INFO + "GameType=GT_BATTLEGROUNDS",
+        _G + "TAG_CHANGE Entity=GameEntity tag=TURN value=12",
+        _G + "TAG_CHANGE Entity=GameEntity tag=TURN value=13",
+    ]))
+    assert [type(e).__name__ for e in events] == ["CreateGame", "GameInfo"]
+
+
+def test_le_doublon_powertasklist_ne_coupe_pas_la_traversee():
+    """Hearthstone journalise tout deux fois : GameState puis PowerTaskList.
+    Le doublon de CREATE_GAME arrive huit lignes après le GameType — le prendre
+    pour la partie suivante coupait le saut aussitôt commencé."""
+    events = list(parse_lines([
+        _G + "CREATE_GAME",
+        _INFO + "GameType=GT_BATTLEGROUNDS",
+        _TASK + "CREATE_GAME",                       # le piège
+        _G + "TAG_CHANGE Entity=GameEntity tag=TURN value=12",
+    ]))
+    assert [type(e).__name__ for e in events] == ["CreateGame", "GameInfo"]
+
+
+def test_la_partie_suivante_est_bien_reprise():
+    """Le saut s'arrête au vrai CREATE_GAME : la partie classée qui suit une
+    partie de Champ de bataille doit être suivie normalement."""
+    events = list(parse_lines([
+        _G + "CREATE_GAME",
+        _INFO + "GameType=GT_BATTLEGROUNDS",
+        _G + "TAG_CHANGE Entity=GameEntity tag=TURN value=12",
+        _G + "CREATE_GAME",
+        _INFO + "GameType=GT_RANKED",
+        _G + "TAG_CHANGE Entity=GameEntity tag=TURN value=3",
+    ]))
+    assert [type(e).__name__ for e in events] == [
+        "CreateGame", "GameInfo", "CreateGame", "GameInfo", "TagChange",
+    ]

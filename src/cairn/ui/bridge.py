@@ -283,6 +283,7 @@ class TrackerBridge(QObject):
 
         self._refresh_deck_refs()   # listes d'archétypes déjà enregistrées
 
+        self._poll_ms = poll_ms
         self._timer = QTimer(self)
         self._timer.setInterval(poll_ms)
         self._timer.timeout.connect(self.refresh)
@@ -510,6 +511,12 @@ class TrackerBridge(QObject):
             self._log_full_seen = self._tracker.log_full
             self.changed.emit()
 
+        # Rattrapage d'un gros journal : le tailer ne rend qu'une tranche par
+        # passe pour ne pas figer l'interface. Enchaîner à 0 ms rend la main à
+        # la boucle d'événements entre deux tranches — l'interface reste vivante
+        # et le rattrapage garde sa vitesse. Retour à la cadence normale ensuite.
+        self._timer.setInterval(0 if update.catching_up else self._poll_ms)
+
         if update.session_switched is not None:
             self._decks_tailer = LogTailer(update.session_switched / "Decks.log")
             try:
@@ -536,6 +543,11 @@ class TrackerBridge(QObject):
                     if g.is_spectated(self._config.own_account):
                         # partie d'un contact regardée en spectateur : elle n'est
                         # pas à nous, ni pour les statistiques ni pour le corpus.
+                        self._recorded.add(idx)
+                        continue
+                    if g.is_deckless_mode():
+                        # Champ de bataille / Mercenaires : pas de deck, donc
+                        # aucun winrate par deck ni par archétype à en tirer.
                         self._recorded.add(idx)
                         continue
                     klass = opponent_class(g, self._db)
@@ -1784,6 +1796,8 @@ class TrackerBridge(QObject):
         game = self._tracker.current_game
         if game is None or game.is_spectated(self._config.own_account):
             return False  # on regarde la partie d'un contact : pas la nôtre
+        if game.is_deckless_mode():
+            return False  # Champ de bataille, Mercenaires : rien à suivre
         return not game.complete
 
     @Property(bool, notify=changed)

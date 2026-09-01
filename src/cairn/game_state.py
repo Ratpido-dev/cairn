@@ -17,6 +17,7 @@ from .power_log import (
     EntityDef,
     Event,
     GameInfo,
+    MODES_SANS_DECK,
     PlayerName,
     ShuffleDeck,
     TagChange,
@@ -212,6 +213,20 @@ class Game:
         if not own_account or not self.player_accounts:
             return False
         return own_account not in self.player_accounts.values()
+
+    def is_deckless_mode(self) -> bool:
+        """Vrai pour les modes qui ne se jouent pas avec un deck construit.
+
+        Le Champ de bataille et les Mercenaires écrivent un journal de partie
+        normal, mais aucune carte n'y sort d'un deck : Cairn affichait donc le
+        deck construit de la partie précédente, intact, par-dessus une partie
+        où il ne veut rien dire — et l'archivait ensuite dans les winrates.
+
+        Tant que le type n'est pas connu on répond False : le ``GameType``
+        arrive quelques centaines de lignes après le début de la partie, et ne
+        rien cacher prime sur cacher à tort.
+        """
+        return (self.game_type or "").startswith(MODES_SANS_DECK)
 
     def local_player_id(self, own_account: str | None = None) -> int | None:
         """Le joueur local = celui dont on voit les cartes piochées.

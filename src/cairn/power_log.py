@@ -51,6 +51,11 @@ _SHUFFLE = re.compile(r"^SHUFFLE_DECK PlayerID=(?P<player_id>\d+)$")
 _GAME_INFO = re.compile(r"^(?P<key>GameType|FormatType)=(?P<value>\S+)$")
 _PLAYER_NAME = re.compile(r"^PlayerID=(?P<player_id>\d+), PlayerName=(?P<name>.+)$")
 
+# Modes qui ne se jouent pas avec un deck construit. Comparés par PRÉFIXE :
+# Blizzard décline le Champ de bataille en duo, en amical et contre l'IA, et
+# une liste exacte serait à refaire à chaque variante.
+MODES_SANS_DECK = ("GT_BATTLEGROUNDS", "GT_MERCENARIES")
+
 
 @dataclass
 class EntityRef:
@@ -150,8 +155,28 @@ class IncrementalParser:
 
     def __init__(self) -> None:
         self._pending: EntityDef | None = None
+        self._saut = False  # partie sans deck en cours : on la traverse sans la lire
 
     def feed(self, raw: str) -> list[Event]:
+        if self._saut:
+            # Une partie de Champ de bataille pèse ~86 Mo là où une partie
+            # classée en pèse 5 : 675 000 lignes sur les 830 000 d'une session
+            # mesurée ici. Comme ces modes n'ont pas de deck et sont ignorés
+            # partout en aval, les analyser est du travail pur perte. On les
+            # traverse avec une recherche de sous-chaîne — sans regex, qui est
+            # justement ce qui coûte cher — jusqu'à la partie suivante.
+            if "CREATE_GAME" not in raw:
+                return []
+            # Hearthstone journalise tout DEUX fois, sur GameState et sur
+            # PowerTaskList ; seul le premier canal compte (cf. _LINE). Le
+            # doublon arrive huit lignes après le GameType, et le prendre pour
+            # la partie suivante coupait le saut aussitôt commencé.
+            m = _LINE.match(raw)
+            if m is None or m["body"].lstrip() != "CREATE_GAME":
+                return []
+            self._saut = False
+            self._pending = None
+
         m = _LINE.match(raw)
         if not m:
             return []
@@ -172,6 +197,12 @@ class IncrementalParser:
             g = _GAME_INFO.match(body)
             if g:
                 out.append(GameInfo(key=g["key"], value=g["value"]))
+                if g["key"] == "GameType" and g["value"].startswith(MODES_SANS_DECK):
+                    # Le GameType arrive quelques centaines de lignes après le
+                    # CREATE_GAME : la partie existe déjà côté moteur, avec son
+                    # type — assez pour que l'affichage et l'historique
+                    # l'écartent. Tout ce qui suit ne sert à personne.
+                    self._saut = True
                 return out
             p = _PLAYER_NAME.match(body)
             if p:
@@ -218,6 +249,7 @@ class IncrementalParser:
 
     def reset(self) -> None:
         self._pending = None
+        self._saut = False
 
 
 def parse_lines(lines) -> Iterator[Event]:

@@ -319,7 +319,7 @@ la referme.
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -e . -r requirements.txt
-.venv/bin/python -m pytest                  # 386 tests
+.venv/bin/python -m pytest                  # 393 tests
 .venv/bin/python tools/panel.py --replay    # démo sans jouer, historique jetable
 .venv/bin/python tools/screenshot.py        # captures reproductibles, hors écran
 .venv/bin/python tools/stats.py             # winrates et dernières parties

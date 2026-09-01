@@ -367,3 +367,41 @@ def test_suit_le_journal_si_hs_le_rouvre(tmp_path):
     tracker.poll()
     assert tracker._tailer.path == power
     assert len(tracker.engine.games) >= 1
+
+
+def test_tailer_lit_par_tranches_sans_rien_perdre(tmp_path, monkeypatch):
+    """Un journal plus gros qu'une tranche est rendu en plusieurs passes, dans
+    l'ordre et sans perte : c'est ce qui évite de figer l'interface au démarrage
+    sur un Power.log de 100 Mo (534 Mo de pointe avant, 155 après)."""
+    monkeypatch.setattr(LogTailer, "_TAILLE_BLOC", 64)
+    path = tmp_path / "Power.log"
+    attendu = [f"ligne{i}" for i in range(200)]
+    path.write_text("\n".join(attendu) + "\n")
+
+    tailer = LogTailer(path)
+    lues, passes = [], 0
+    while True:
+        lot = tailer.poll()
+        if not lot:
+            break
+        lues.extend(lot)
+        passes += 1
+
+    assert lues == attendu
+    assert passes > 1, "tout a été lu d'un coup : la tranche n'est pas appliquée"
+    assert tailer.en_retard is False
+
+
+def test_tailer_signale_le_retard_pendant_le_rattrapage(tmp_path, monkeypatch):
+    """``en_retard`` pilote la cadence du QTimer : faux à tort, l'interface
+    attend 500 ms entre deux tranches et le rattrapage traîne."""
+    monkeypatch.setattr(LogTailer, "_TAILLE_BLOC", 32)
+    path = tmp_path / "Power.log"
+    path.write_text("\n".join(f"ligne{i}" for i in range(50)) + "\n")
+
+    tailer = LogTailer(path)
+    tailer.poll()
+    assert tailer.en_retard is True
+    while tailer.poll():
+        pass
+    assert tailer.en_retard is False

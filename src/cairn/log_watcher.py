@@ -37,6 +37,14 @@ class LogTailer:
     # disponible quand le système de fichiers a recyclé l'inode (cf. poll()).
     _TAILLE_TETE = 256
 
+    # Un poll ne lit jamais plus que ça. Le plafond des journaux étant levé,
+    # Power.log dépasse allègrement les 100 Mo : tout avaler d'un coup faisait
+    # coexister le fichier, sa copie découpée en lignes et les événements —
+    # 534 Mo de pointe mesurés sur 104 Mo de journal, et une interface figée
+    # une seconde et demie au démarrage. On lit par tranches, quitte à ce que
+    # le rattrapage prenne plusieurs passes ; ``en_retard`` dit qu'il en reste.
+    _TAILLE_BLOC = 8 * 1024 * 1024
+
     def __init__(self, path: Path, from_start: bool = True):
         self.path = Path(path)  # peut être redirigé après un renommage
         self._pos = 0
@@ -44,6 +52,7 @@ class LogTailer:
         self._inode: int | None = None
         self._tete: str = ""
         self._from_start = from_start
+        self.en_retard = False  # vrai tant qu'il reste du journal à rattraper
 
     def poll(self) -> list[str]:
         """Nouvelles lignes complètes depuis le dernier appel."""
@@ -64,6 +73,7 @@ class LogTailer:
             self._tete = ""
 
         if st.st_size == self._pos:
+            self.en_retard = False
             return []
 
         with open(self.path, encoding="utf-8", errors="replace") as f:
@@ -80,8 +90,9 @@ class LogTailer:
                 self._buf = ""
             self._tete = tete
             f.seek(self._pos)
-            chunk = f.read()
+            chunk = f.read(self._TAILLE_BLOC)
             self._pos = f.tell()
+        self.en_retard = self._pos < st.st_size
 
         self._buf += chunk
         *lines, self._buf = self._buf.split("\n")
@@ -95,6 +106,8 @@ class LiveUpdate:
     session_switched: Path | None = None  # nouveau dossier de session, le cas échéant
     new_games: list[Game] = field(default_factory=list)  # parties qui ont démarré
     events: list = field(default_factory=list)  # Draw / Play / DeckEntry / …
+
+    catching_up: bool = False  # il reste du journal à rattraper après ce poll
 
     @property
     def empty(self) -> bool:
@@ -202,6 +215,7 @@ class LiveTracker:
                 update.events.extend(game.events[seen:])
                 self._seen_events[idx] = len(game.events)
 
+        update.catching_up = self._tailer.en_retard
         return update
 
     # ---- rotation du journal ----------------------------------------------

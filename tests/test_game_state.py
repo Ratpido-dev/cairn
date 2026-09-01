@@ -3,6 +3,7 @@
 from src.cairn.game_state import (
     DeckEntry,
     Draw,
+    Game,
     GameStateEngine,
     Play,
     learn_own_account,
@@ -252,3 +253,22 @@ def test_apprentissage_refuse_de_deviner():
     déduction fausse est pire que pas de déduction."""
     assert learn_own_account([_partie("1", "2")]) is None          # 1 partie
     assert learn_own_account([_partie("1", "2")] * 2, minimum=2) is None  # égalité
+
+
+def test_modes_sans_deck_reconnus():
+    """Le Champ de bataille et les Mercenaires n'ont pas de deck : les suivre
+    revenait à afficher le deck construit de la partie précédente."""
+    for mode in ("GT_BATTLEGROUNDS", "GT_BATTLEGROUNDS_DUO",
+                 "GT_BATTLEGROUNDS_FRIENDLY", "GT_MERCENARIES_PVP"):
+        game = Game(game_type=mode)
+        assert game.is_deckless_mode() is True, mode
+
+
+def test_modes_a_deck_non_filtres():
+    """Le classé, l'amical, l'arène et les duels ont un deck : on les suit.
+    Type inconnu = on suit aussi — le GameType arrive après le début de la
+    partie, et cacher à tort est pire que cacher tard."""
+    for mode in ("GT_RANKED", "GT_CASUAL", "GT_VS_FRIEND", "GT_ARENA",
+                 "GT_PVPDR", None, ""):
+        game = Game(game_type=mode)
+        assert game.is_deckless_mode() is False, mode
