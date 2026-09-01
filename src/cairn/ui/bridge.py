@@ -22,6 +22,7 @@ from PySide6.QtCore import (
 
 import os
 import subprocess
+import sys
 import threading
 
 from ..cards_db import CardsDb
@@ -1660,11 +1661,16 @@ class TrackerBridge(QObject):
     def _reset_kwin_positions() -> None:
         if "KDE" not in os.environ.get("XDG_CURRENT_DESKTOP", ""):
             return
-        # deux emplacements : le dépôt (mode source) et la copie posée par
-        # install.sh — une installation ne garde pas l'arborescence du dépôt
+        # Trois cas, du plus spécifique au plus général : le dépôt (mode
+        # source), la copie posée par install.sh, et enfin les emplacements
+        # système — un paquet de distribution (AUR, .deb…) pose le script sous
+        # ``share/cairn`` et ne garde ni l'arborescence du dépôt ni le dossier
+        # de données de l'utilisateur.
         for script in (
             Path(__file__).resolve().parents[3] / "tools" / "install_kwin_rule.sh",
             DATA_DIR / "install_kwin_rule.sh",
+            Path(sys.prefix) / "share" / "cairn" / "install_kwin_rule.sh",
+            Path("/usr/share/cairn/install_kwin_rule.sh"),
         ):
             if script.is_file():
                 break

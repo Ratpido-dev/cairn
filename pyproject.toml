@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cairn-tracker"
-version = "1.0.0"
+version = "1.0.2"
 description = "Native Linux Hearthstone tracker: lightweight, reads the game's own logs, no Wine"
 readme = "README.md"
 license = { file = "LICENSE" }

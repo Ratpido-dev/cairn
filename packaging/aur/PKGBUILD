@@ -1,0 +1,41 @@
+# Maintainer: Ratpido <clementlhermitte2@gmail.com>
+pkgname=cairn-tracker
+pkgver=1.0.2
+pkgrel=1
+pkgdesc="Native Linux Hearthstone tracker: reads the game's own logs, no Wine, no injection"
+arch=('any')
+url="https://github.com/Ratpido-dev/cairn"
+license=('MIT')
+depends=('python' 'pyside6')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
+checkdepends=('python-pytest')
+optdepends=('kwin: window rules that keep the overlays above a fullscreen game')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "cairn-$pkgver"
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "cairn-$pkgver"
+  python -m pytest
+}
+
+package() {
+  cd "cairn-$pkgver"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  # Les règles KWin sont posées à la demande par le launcher : le script doit
+  # rester lisible par Cairn après installation (cf. bridge._reset_kwin_positions).
+  install -Dm755 tools/install_kwin_rule.sh \
+    "$pkgdir/usr/share/cairn/install_kwin_rule.sh"
+
+  install -Dm644 packaging/cairn.desktop \
+    "$pkgdir/usr/share/applications/cairn.desktop"
+  install -Dm644 packaging/cairn.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/cairn.svg"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

@@ -181,7 +181,7 @@ def main(argv: list[str] | None = None) -> int:
         line(
             OK if installed else WARN,
             "règles de fenêtres",
-            "installées" if installed else "manquantes — bash tools/install_kwin_rule.sh",
+            "installées" if installed else "manquantes — relance install.sh, ou « Replacer les widgets » dans le launcher",
         )
 
     ready = status.ready and CARDS_JSON.is_file() and not capped
