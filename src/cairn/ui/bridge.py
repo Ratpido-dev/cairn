@@ -519,6 +519,10 @@ class TrackerBridge(QObject):
         self._timer.setInterval(0 if update.catching_up else self._poll_ms)
 
         if update.session_switched is not None:
+            # Hearthstone relancé = nouveau dossier de journaux. Les mises en
+            # file de la session précédente ne valent plus rien : les garder
+            # faisait ressortir le deck d'hier sur la partie d'aujourd'hui.
+            self._queue_events.clear()
             self._decks_tailer = LogTailer(update.session_switched / "Decks.log")
             try:
                 self._player_decks = read_decks_log(update.session_switched / "Decks.log")
@@ -1724,7 +1728,12 @@ class TrackerBridge(QObject):
     def deckName(self):
         if self._view.deck_name:
             return self._view.deck_name
-        return "Waiting for a game…" if self._config.language == "en" else "En attente de partie…"
+        en = self._config.language == "en"
+        if self.hasGame:
+            # Partie en cours dont le deck est indéterminable (partie amicale) :
+            # le dire, plutôt que laisser croire à une attente de partie.
+            return "Unknown deck" if en else "Deck inconnu"
+        return "Waiting for a game…" if en else "En attente de partie…"
 
     @Property(str, notify=changed)
     def opponentName(self):

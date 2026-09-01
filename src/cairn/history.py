@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 import sqlite3
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from .decks_log import PlayerDeck
@@ -166,11 +166,26 @@ class History:
         local = game.local_player_id()
         local_name = game.player_names.get(local, "") if local is not None else ""
         opponent = next((n for n in game.results if n != local_name), None)
-        # jour extrait du nom de session « Hearthstone_2026_08_01_00_06_06 »
+        # Jour extrait du nom de session « Hearthstone_2026_08_01_00_06_06 ».
+        # Ce nom est celui du LANCEMENT du jeu : une session commencée à 22h30
+        # et poursuivie après minuit garderait la date de la veille pour ses
+        # parties du petit matin. Elles étaient alors triées comme les plus
+        # ANCIENNES de leur journée — reléguées hors des quinze parties
+        # récentes affichées, donc invisibles alors qu'elles venaient de finir.
+        # Une heure de partie antérieure à l'heure de lancement signifie qu'on
+        # a franchi minuit.
         parts = session.split("_")
-        played_on = (
-            f"{parts[1]}-{parts[2]}-{parts[3]}" if len(parts) >= 4 else date.today().isoformat()
-        )
+        played_on = date.today().isoformat()
+        if len(parts) >= 7:
+            try:
+                jour = date(int(parts[1]), int(parts[2]), int(parts[3]))
+                if (game.ts or "")[:8] < f"{parts[4]}:{parts[5]}:{parts[6]}":
+                    jour += timedelta(days=1)
+                played_on = jour.isoformat()
+            except ValueError:
+                pass
+        elif len(parts) >= 4:
+            played_on = f"{parts[1]}-{parts[2]}-{parts[3]}"
         # colonnes nommées : la table en a gagné (opponent_class, archived) et
         # un INSERT positionnel casserait à chaque migration
         cur = self._conn.execute(

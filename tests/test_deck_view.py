@@ -5,9 +5,9 @@ import re
 import pytest
 
 from src.cairn.cards_db import CardsDb
-from src.cairn.decks_log import parse_queue_events
+from src.cairn.decks_log import PlayerDeck, QueueEvent, parse_queue_events
 from src.cairn.deck_view import compute_deck_view, pick_queued_deck
-from src.cairn.game_state import replay_file
+from src.cairn.game_state import Game, replay_file
 from src.cairn.paths import CARDS_JSON, FIXTURES_DIR
 
 FIXTURE_DIR = FIXTURES_DIR / "Hearthstone_2026_08_01_00_06_06"
@@ -637,3 +637,25 @@ def test_deck_et_cadeaux_ne_se_confondent_pas_dans_le_compteur(db, games, queue_
         view = compute_deck_view(game, pick_queued_deck(queue_events, game), db)
         crees = [p.created for p in view.opponent_plays]
         assert crees == sorted(crees), "les cartes offertes doivent finir la liste"
+
+
+# ---- deck joué : ce qu'on peut savoir, et ce qu'on ne peut pas -------------
+
+def _queue(ts: str, nom: str) -> QueueEvent:
+    return QueueEvent(ts=ts, deck=PlayerDeck(name=nom, deck_id=1, deckstring=""))
+
+
+def test_partie_amicale_aucun_deck_devine():
+    """Un défi direct n'est pas une mise en file : Hearthstone n'écrit aucun
+    « Finding Game With Deck ». Se rabattre sur la dernière mise en file connue
+    affichait le deck de la partie classée précédente, winrate compris."""
+    game = Game(ts="20:00:00.0000000", game_type="GT_VS_FRIEND")
+    assert pick_queued_deck([_queue("14:00:00.0000000", "Thief Priest")], game) is None
+
+
+def test_partie_classee_prend_la_mise_en_file_precedente():
+    """Le comportement normal ne doit pas bouger."""
+    game = Game(ts="20:00:00.0000000", game_type="GT_RANKED")
+    events = [_queue("14:00:00.0000000", "Thief Priest"), _queue("19:59:00.0000000", "Attack Druid")]
+    deck = pick_queued_deck(events, game)
+    assert deck is not None and deck.name == "Attack Druid"

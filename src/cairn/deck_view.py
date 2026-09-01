@@ -301,6 +301,13 @@ def pick_queued_deck(queue_events: list[QueueEvent], game: Game) -> PlayerDeck |
     Comparaison sur HH:MM:SS (même journée) ; si l'horodatage manque ou si la
     partie précède toute mise en file connue, on prend la dernière connue.
     """
+    if game.game_type == "GT_VS_FRIEND":
+        # Une partie amicale n'est pas une mise en file : on défie quelqu'un
+        # directement, et Hearthstone n'écrit alors aucun « Finding Game With
+        # Deck ». Le repli « dernière mise en file connue » afficherait donc le
+        # deck de la partie classée précédente, avec son winrate — un mensonge
+        # coûteux, puisque c'est justement ce que le panneau sert à lire.
+        return None
     if not queue_events:
         return None
     if game.ts is None:

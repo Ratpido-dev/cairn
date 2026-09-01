@@ -264,3 +264,25 @@ def test_concession_enregistree_et_exclue_des_moyennes(tmp_path, games_and_queue
     # la moyenne ignore l'abandon immédiat (12 s) et ne garde que les 20 min
     (_klass, _n, _v, moyenne), = h.class_stats()
     assert moyenne > 600, f"moyenne polluée par la concession : {moyenne} s"
+
+
+def test_session_qui_franchit_minuit(history, games_and_queue):
+    """Le nom de session est celui du LANCEMENT du jeu. Une partie jouée à
+    00h08 dans une session commencée à 22h30 a eu lieu le LENDEMAIN — la dater
+    de la veille la triait comme la plus ancienne de sa journée, et elle
+    disparaissait de la liste des parties récentes alors qu'elle venait de
+    finir."""
+    games, queue = games_and_queue
+    assert games[0].ts.startswith("00:08")  # la fixture est bien nocturne
+
+    history.record("Hearthstone_2026_08_01_22_30_54", 0, games[0], None)
+    (row,) = history.recent(limit=1)
+    assert row[0] == "2026-08-02"
+
+
+def test_session_de_jour_inchangee(history, games_and_queue):
+    """Une partie postérieure à l'heure de lancement garde la date du nom."""
+    games, queue = games_and_queue
+    history.record("Hearthstone_2026_08_01_00_06_06", 0, games[0], None)
+    (row,) = history.recent(limit=1)
+    assert row[0] == "2026-08-01"
