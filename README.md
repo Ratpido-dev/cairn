@@ -16,6 +16,10 @@ sits around 4 GB.
 **English** · [Français](README.fr.md)
 
 <p align="center">
+  <img src="docs/captures/apercu-en-jeu.jpg" alt="Cairn over Hearthstone" width="900">
+</p>
+
+<p align="center">
   <img src="docs/captures/apercu-panneau-deck.png" alt="Deck panel" height="420">
   <img src="docs/captures/apercu-panneau-adversaire.png" alt="Opponent panel" height="420">
   <img src="docs/captures/apercu-compteurs.png" alt="Contextual counters" height="130">

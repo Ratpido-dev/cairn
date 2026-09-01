@@ -16,6 +16,10 @@ longue session. À titre de comparaison, Firestone sous Wine tourne autour de 4 
 **Français** · [English](README.md)
 
 <p align="center">
+  <img src="docs/captures/apercu-en-jeu.jpg" alt="Cairn par-dessus Hearthstone" width="900">
+</p>
+
+<p align="center">
   <img src="docs/captures/apercu-panneau-deck.png" alt="Panneau du deck" height="420">
   <img src="docs/captures/apercu-panneau-adversaire.png" alt="Panneau adversaire" height="420">
   <img src="docs/captures/apercu-compteurs.png" alt="Compteurs contextuels" height="130">
