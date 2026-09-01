@@ -1,0 +1,19 @@
+pkgbase = cairn-tracker
+	pkgdesc = Native Linux Hearthstone tracker: reads the game's own logs, no Wine, no injection
+	pkgver = 1.0.2
+	pkgrel = 1
+	url = https://github.com/Ratpido-dev/cairn
+	arch = any
+	license = MIT
+	checkdepends = python-pytest
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-setuptools
+	makedepends = python-wheel
+	depends = python
+	depends = pyside6
+	optdepends = kwin: window rules that keep the overlays above a fullscreen game
+	source = cairn-tracker-1.0.2.tar.gz::https://github.com/Ratpido-dev/cairn/archive/refs/tags/v1.0.2.tar.gz
+	sha256sums = 8472f604dbf2cd53f89651b451584bb505cbfe8e1990767f5217ce9cd594fa1b
+
+pkgname = cairn-tracker

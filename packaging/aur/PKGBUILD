@@ -11,7 +11,7 @@ makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel
 checkdepends=('python-pytest')
 optdepends=('kwin: window rules that keep the overlays above a fullscreen game')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('8472f604dbf2cd53f89651b451584bb505cbfe8e1990767f5217ce9cd594fa1b')
 
 build() {
   cd "cairn-$pkgver"
