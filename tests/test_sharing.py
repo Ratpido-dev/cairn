@@ -362,3 +362,54 @@ def test_loadingscreen_inclus_dans_le_partage(tmp_path):
     sortie = preparer(FIXTURE, sel="sel", dest=tmp_path)
     if (FIXTURE / "LoadingScreen.log").is_file():
         assert (sortie / "LoadingScreen.log").is_file()
+
+
+# ---- pseudonymisation par blocs -------------------------------------------
+
+def _journal_piege(gros: int = 3) -> str:
+    """Un nom NU d'abord, son battletag complet bien plus loin.
+
+    C'est le cas qui casse un traitement en un seul parcours : au moment où on
+    lit « Deryth » tout seul, on ne sait pas encore que c'est un joueur. Le
+    remplissage force les deux occurrences dans des blocs différents.
+    """
+    return (
+        "FULL_ENTITY - Updating Deryth CardID=EX1_001\n"
+        + "D 00:00:00.0000000 GameState.DebugPrintPower() - remplissage\n" * gros
+        + "PlayerID=1, PlayerName=Deryth#21527\n"
+    )
+
+
+def test_bloc_ne_change_pas_le_resultat(tmp_path, monkeypatch):
+    """Découper le fichier ne doit rien changer : même sortie, au caractère."""
+    import src.cairn.sharing as sh
+
+    source = tmp_path / "Power.log"
+    source.write_text(_journal_piege(gros=400), encoding="utf-8")
+
+    entier = tmp_path / "entier.log"
+    monkeypatch.setattr(sh, "TAILLE_BLOC", 1 << 30)   # un seul bloc
+    sh.pseudonymiser_fichier(source, entier, sel="s")
+
+    morcele = tmp_path / "morcele.log"
+    monkeypatch.setattr(sh, "TAILLE_BLOC", 512)       # des dizaines de blocs
+    sh.pseudonymiser_fichier(source, morcele, sel="s")
+
+    assert morcele.read_text(encoding="utf-8") == entier.read_text(encoding="utf-8")
+
+
+def test_nom_nu_avant_son_battletag_est_bien_remplace(tmp_path, monkeypatch):
+    """La fuite qu'on ne doit jamais laisser passer : le pseudo de quelqu'un
+    qui n'a rien accepté, recopié tel quel parce qu'il apparaissait avant son
+    battletag. C'est ce qu'impose la double passe."""
+    import src.cairn.sharing as sh
+    monkeypatch.setattr(sh, "TAILLE_BLOC", 512)
+
+    source = tmp_path / "Power.log"
+    source.write_text(_journal_piege(gros=400), encoding="utf-8")
+    cible = tmp_path / "out.log"
+    sh.pseudonymiser_fichier(source, cible, sel="s")
+
+    sortie = cible.read_text(encoding="utf-8")
+    assert "Deryth" not in sortie
+    assert "Joueur1" in sortie

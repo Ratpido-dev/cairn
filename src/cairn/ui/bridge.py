@@ -24,6 +24,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 
 from ..cards_db import CardsDb
 from ..config import Config, LEAGUES
@@ -819,7 +820,11 @@ class TrackerBridge(QObject):
         gelaient l'interface au-dessus du jeu s'ils tournaient ici.
         """
         try:
-            sharing.preparer(session, sel=self._install_id(), meta=meta)
+            # respirer() entre deux blocs : une regex ne rend pas le GIL,
+            # ce court sommeil est le seul moment où le fil de l'interface
+            # peut s'exécuter pendant la pseudonymisation.
+            sharing.preparer(session, sel=self._install_id(), meta=meta,
+                             respirer=lambda: time.sleep(0.002))
         except OSError:
             return   # disque plein, session disparue : jamais bloquant
         self._vider_outbox_si_possible()

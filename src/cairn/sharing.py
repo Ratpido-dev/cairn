@@ -85,6 +85,9 @@ class Pseudonymiseur:
     def __post_init__(self) -> None:
         self._joueurs = {}
         self._comptes = {}
+        self._motif_nus = None   # alternance compilée, cf. _noms_nus
+        self._table_nus = {}
+        self._nus_pour = -1      # nombre de joueurs au moment de la compilation
 
     def _jeton(self, valeur: str, largeur: int) -> str:
         empreinte = hashlib.blake2b(
@@ -131,25 +134,89 @@ class Pseudonymiseur:
         remplacement est ancré sur des frontières de mot pour ne pas mordre
         dans un nom de carte ou un identifiant plus long.
         """
-        for entier, jeton in self._joueurs.items():
-            nom = entier.split("#", 1)[0]
-            contenu = re.sub(
-                rf"(?<![\w#]){re.escape(nom)}(?![\w#])",
-                jeton.split("#", 1)[0],
-                contenu,
+        if not self._joueurs:
+            return contenu
+        if self._nus_pour != len(self._joueurs):
+            # UNE alternance plutôt qu'une passe par joueur : à neuf joueurs,
+            # l'ancienne boucle relisait neuf fois chaque octet du journal.
+            # Les noms sont triés du plus long au plus court pour qu'un pseudo
+            # ne soit pas mangé par celui dont il est le préfixe.
+            self._table_nus = {
+                entier.split("#", 1)[0]: jeton.split("#", 1)[0]
+                for entier, jeton in self._joueurs.items()
+            }
+            noms = sorted(self._table_nus, key=len, reverse=True)
+            self._motif_nus = re.compile(
+                r"(?<![\w#])(" + "|".join(re.escape(n) for n in noms) + r")(?![\w#])"
             )
-        return contenu
+            self._nus_pour = len(self._joueurs)
+        return self._motif_nus.sub(lambda m: self._table_nus[m.group(1)], contenu)
 
     @property
     def joueurs_remplaces(self) -> int:
         return len(self._joueurs)
 
 
-def pseudonymiser_fichier(source: Path, cible: Path, sel: str) -> int:
-    """Écrit une copie pseudonymisée. Rend le nombre de joueurs remplacés."""
+# Taille d'un bloc de pseudonymisation. Une expression régulière ne relâche
+# PAS le GIL : un ``re.sub`` sur 100 Mo tient le seul fil d'exécution Python
+# pendant plus d'une seconde, et gèle donc l'interface — y compris depuis un
+# thread de fond, ce qui rendait le déport en thread inopérant. Mesuré ici :
+# 15 substitutions de 1,15 s chacune sur une session de 102 Mo. Par blocs de
+# 2 Mo, chaque substitution dure quelques dizaines de millisecondes et Qt
+# reprend la main entre deux.
+TAILLE_BLOC = 256 * 1024
+
+
+def _blocs(f, taille: int = TAILLE_BLOC):
+    """Découpe un fichier en blocs terminant sur une fin de ligne.
+
+    Les motifs sont ancrés sur des frontières de mot et aucun ne franchit une
+    fin de ligne : couper là est donc sans effet sur le résultat.
+    """
+    reste = ""
+    while True:
+        morceau = f.read(taille)
+        if not morceau:
+            break
+        reste += morceau
+        coupe = reste.rfind("\n")
+        if coupe == -1:
+            continue
+        yield reste[: coupe + 1]
+        reste = reste[coupe + 1 :]
+    if reste:
+        yield reste
+
+
+def pseudonymiser_fichier(source: Path, cible: Path, sel: str,
+                          respirer=None) -> int:
+    """Écrit une copie pseudonymisée. Rend le nombre de joueurs remplacés.
+
+    Deux passes, et c'est nécessaire : ``_noms_nus`` ne peut remplacer un
+    pseudo sans discriminant que s'il a DÉJÀ vu le battletag complet ailleurs
+    dans le fichier. En un seul parcours par blocs, un nom nu apparaissant
+    avant son battletag serait recopié tel quel — une fuite d'identité, sur
+    l'adversaire qui n'a rien accepté. On apprend donc tous les joueurs
+    d'abord, on remplace ensuite.
+
+    ``respirer`` est appelé entre deux blocs : c'est ce qui rend la main au
+    fil de l'interface pendant le travail.
+    """
     p = Pseudonymiseur(sel=sel)
-    contenu = source.read_text(encoding="utf-8", errors="replace")
-    cible.write_text(p.texte(contenu), encoding="utf-8")
+
+    with source.open(encoding="utf-8", errors="replace") as f:
+        for bloc in _blocs(f):
+            _BATTLETAG.sub(lambda m: p.battletag(m.group(1), m.group(2)), bloc)
+            if respirer is not None:
+                respirer()
+
+    with source.open(encoding="utf-8", errors="replace") as f, \
+            cible.open("w", encoding="utf-8") as sortie:
+        for bloc in _blocs(f):
+            sortie.write(p.texte(bloc))
+            if respirer is not None:
+                respirer()
+
     return p.joueurs_remplaces
 
 
@@ -189,7 +256,7 @@ def metadonnees(
 
 
 def preparer(session: Path, sel: str, dest: Path | None = None,
-             meta: dict | None = None) -> Path | None:
+             meta: dict | None = None, respirer=None) -> Path | None:
     """Dépose une session PSEUDONYMISÉE dans l'outbox. Rend son dossier.
 
     Il n'y a **pas** d'option pour envoyer les journaux bruts, et c'est
@@ -209,7 +276,7 @@ def preparer(session: Path, sel: str, dest: Path | None = None,
         src = session / nom
         if not src.is_file():
             continue
-        pseudonymiser_fichier(src, dest / nom, sel)
+        pseudonymiser_fichier(src, dest / nom, sel, respirer=respirer)
     if meta is not None:
         (dest / "meta.json").write_text(
             json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
