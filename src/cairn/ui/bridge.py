@@ -227,6 +227,8 @@ class TrackerBridge(QObject):
             self,
         )
         self._my_hand_model = _ListModel(_card_roles + ["origin"], self)
+        self._my_plays_model = _ListModel(
+            ["label", "count", "cost", "cardId", "rarity", "origin", "gift"], self)
         # Effets globaux : le nom de l'effet, mais la CARTE SOURCE en illustration
         # et en aperçu — un enchantement n'a ni rendu ni texte utile (« PV
         # augmentés. »), sa carte source a les deux. « note » porte le texte
@@ -697,6 +699,20 @@ class TrackerBridge(QObject):
             ]
         )
         self._my_hand_model.replace(_with_origin(view.my_hand))
+        self._my_plays_model.replace(
+            [
+                {
+                    "label": self._db.localized_name(p.card_id, lang) if p.card_id else p.label,
+                    "count": p.count,
+                    "cost": p.cost,
+                    "cardId": p.card_id,
+                    "rarity": p.rarity,
+                    "origin": p.origin,
+                    "gift": p.created,
+                }
+                for p in view.my_plays
+            ]
+        )
 
         def _effects(effets):
             return [
@@ -1525,6 +1541,30 @@ class TrackerBridge(QObject):
     @Property(QObject, constant=True)
     def myHandModel(self):
         return self._my_hand_model
+
+    @Property("QVariant", notify=changed)
+    def myPlaysModel(self):
+        return self._my_plays_model
+
+    @Property(bool, notify=changed)
+    def myHandEnabled(self):
+        return self._config.my_hand
+
+    @Property(bool, notify=changed)
+    def myPlaysEnabled(self):
+        return self._config.my_plays
+
+    @Slot(bool)
+    def setMyHandEnabled(self, enabled: bool) -> None:
+        self._config.my_hand = bool(enabled)
+        self._config.save()
+        self.changed.emit()
+
+    @Slot(bool)
+    def setMyPlaysEnabled(self, enabled: bool) -> None:
+        self._config.my_plays = bool(enabled)
+        self._config.save()
+        self.changed.emit()
 
     @Property(QObject, constant=True)
     def myEffectsModel(self):

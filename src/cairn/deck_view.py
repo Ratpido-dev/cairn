@@ -269,6 +269,10 @@ class DeckView:
     deck_bottom: list[EntryRow] = field(default_factory=list)
     deck_top: list[EntryRow] = field(default_factory=list)
     opponent_plays: list[OppPlay] = field(default_factory=list)
+    # Ce que J'AI posé. Même forme que ``opponent_plays`` : le panneau du
+    # deck peut alors montrer ce qui est sorti plutôt que ce qu'on tient,
+    # information qu'on a déjà sous les yeux dans le jeu.
+    my_plays: list[OppPlay] = field(default_factory=list)
     opponent_hand: list[OppHandCard] = field(default_factory=list)
     # une ligne par carte tenue par l'adversaire, cachée comprise
     opponent_hand_slots: list[OppHandSlot] = field(default_factory=list)
@@ -644,6 +648,7 @@ def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb) -> DeckV
     # entrées vivantes : entity_id → EntryRow (retirées quand la carte ressort)
     live_entries: dict[int, EntryRow] = {}
     opp_counts: dict[str, OppPlay] = {}
+    my_counts: dict[str, OppPlay] = {}
 
     for ev in game.events:
         mine = local is None or ev.player_id == local
@@ -682,8 +687,9 @@ def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb) -> DeckV
                     pos=("bottom" if creator_id in db.deck_bottom_ids
                          else "top" if creator_id in db.deck_top_ids else ""),
                 )
-        elif isinstance(ev, Play) and not mine and local is not None:
+        elif isinstance(ev, Play) and local is not None:
             card = db.by_card_id.get(ev.card_id or "")
+            cible = my_counts if mine else opp_counts
             if card:
                 # La carte créatrice se lit sur l'entité, tags CREATOR puis
                 # DISPLAYED_CREATOR (cf. Entity.creator_entity_id) — ce dernier
@@ -695,10 +701,10 @@ def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb) -> DeckV
                 # sorti du deck et un offert par un effet doivent se lire sur
                 # deux lignes, sinon l'information se perd dans le compteur.
                 key = (card["name"], origine)
-                if key in opp_counts:
-                    opp_counts[key].count += 1
+                if key in cible:
+                    cible[key].count += 1
                 else:
-                    opp_counts[key] = OppPlay(
+                    cible[key] = OppPlay(
                         label=card["name"],
                         count=1,
                         cost=card.get("cost", 0) or 0,
@@ -766,6 +772,9 @@ def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb) -> DeckV
     # la première liste dit ce qu'il lui reste, la seconde ce qu'il a volé.
     view.opponent_plays = sorted(
         opp_counts.values(), key=lambda p: (p.created, p.cost, p.label)
+    )
+    view.my_plays = sorted(
+        my_counts.values(), key=lambda p: (p.created, p.cost, p.label)
     )
 
     if local is not None:

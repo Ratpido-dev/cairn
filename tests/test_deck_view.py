@@ -728,3 +728,25 @@ def test_sans_liste_connue_rien_n_est_invente(_db_cartes):
     from src.cairn.deck_view import identifier_deck
     game = _partie_avec(_db_cartes, DECKSTRING_A, piochees=6)
     assert identifier_deck(game, [], _db_cartes) is None
+
+
+def test_mes_cartes_jouees_sont_collectees(_db_cartes):
+    """Le panneau du deck doit pouvoir montrer ce que J'AI posé : ma main est
+    déjà à l'écran dans le jeu, mais ce qui est sorti ne se relit nulle part
+    une fois le tour passé."""
+    from src.cairn.deck_view import compute_deck_view
+    from src.cairn.game_state import replay_file
+    from src.cairn.decks_log import parse_queue_events
+
+    fixture = next(FIXTURES_DIR.glob("*/Power.log"))
+    games = replay_file(fixture)
+    queue = parse_queue_events((fixture.parent / "Decks.log").read_text(
+        encoding="utf-8", errors="replace"))
+    game = games[0]
+    view = compute_deck_view(game, pick_queued_deck(queue, game), _db_cartes)
+
+    assert view.my_plays, "aucune carte jouée relevée de mon côté"
+    # les deux camps sont distincts : rien ne doit fuir de l'un vers l'autre
+    miennes = {(p.label, p.count) for p in view.my_plays}
+    siennes = {(p.label, p.count) for p in view.opponent_plays}
+    assert miennes != siennes

@@ -59,6 +59,8 @@ Window {
                       "No collection endpoint is configured in this build: games stay here, on your machine."],
         "oppPanel":  ["Panneau adversaire (à gauche)", "Opponent panel (left)"],
         "handDots":  ["Pastilles sous la main adverse", "Dots under opponent's hand"],
+        "myHand":    ["Ma main dans le panneau", "My hand in the panel"],
+        "myPlays":   ["Mes cartes jouées dans le panneau", "Cards I played, in the panel"],
         "handDotsHint": ["Tour d'arrivée, cadeau, vignette. À caler une fois sous son éventail : la position est retenue.",
                          "Arrival turn, gift, tile. Drag it once under their hand: the position is remembered."],
         "sizeDeck":  ["Taille — mon deck", "Size — my deck"],
@@ -863,6 +865,34 @@ Window {
                         NeonSwitch {
                             checked: tracker.oppPanelEnabled
                             onToggled: tracker.setOppPanelEnabled(checked)
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Text {
+                            text: home.tr("myHand")
+                            color: home.thm.text
+                            font.pixelSize: 12
+                            Layout.fillWidth: true
+                        }
+                        NeonSwitch {
+                            checked: tracker.myHandEnabled
+                            onToggled: tracker.setMyHandEnabled(checked)
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Text {
+                            text: home.tr("myPlays")
+                            color: home.thm.text
+                            font.pixelSize: 12
+                            Layout.fillWidth: true
+                        }
+                        NeonSwitch {
+                            checked: tracker.myPlaysEnabled
+                            onToggled: tracker.setMyPlaysEnabled(checked)
                         }
                     }
 

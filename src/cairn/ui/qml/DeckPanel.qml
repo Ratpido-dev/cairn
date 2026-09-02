@@ -335,10 +335,27 @@ Window {
                     // ce que je tiens, et ce qui est déjà sorti — le découpage que
                     // Firestone met en avant, et qui manquait à Cairn
                     CardList {
+                        visible: tracker.myHandEnabled
                         title: tracker.language === "en" ? "IN HAND" : "EN MAIN"
                         model: tracker.myHandModel
                         tint: "#5fb573"
                         maxRows: 10
+                        showOrigin: true
+                        onCardHovered: (cardId, note) => root.setHover(cardId, note)
+                    }
+
+                    // Ce que J'AI posé, dans la même forme que le panneau
+                    // adverse. Sa main, on ne la voit pas ; la sienne, si —
+                    // elle est à l'écran, sous les yeux. Ce qui est déjà sorti,
+                    // en revanche, ne se relit nulle part une fois le tour
+                    // passé.
+                    CardList {
+                        visible: tracker.myPlaysEnabled
+                        title: tracker.language === "en" ? "CARDS I PLAYED"
+                                                         : "MES CARTES JOUÉES"
+                        model: tracker.myPlaysModel
+                        tint: "#5fb573"
+                        maxRows: 14
                         showOrigin: true
                         onCardHovered: (cardId, note) => root.setHover(cardId, note)
                     }

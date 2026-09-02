@@ -29,6 +29,11 @@ class Config:
     # pastilles flottantes posées sous la main adverse (tour d'arrivée, cadeau,
     # vignette) — elles remplacent la section « EN MAIN » du panneau gauche
     hand_dots: bool = True
+    # Le panneau du deck peut montrer ce qu'on tient, ce qu'on a posé, ou
+    # les deux. La main est déjà sous les yeux dans le jeu ; ce qui est
+    # sorti, non — d'où deux réglages séparés plutôt qu'un choix imposé.
+    my_hand: bool = True
+    my_plays: bool = True
     language: str = "fr"  # "fr" | "en"
     hs_prefix: str = ""  # force le prefix Wine/Proton si la détection se trompe
     # Commande de lancement du jeu, saisie par l'utilisateur. C'est le SEUL
@@ -123,6 +128,8 @@ class Config:
         cfg.counters = dict(data.get("counters", {}))
         cfg.opp_panel = bool(data.get("opp_panel", True))
         cfg.hand_dots = bool(data.get("hand_dots", True))
+        cfg.my_hand = bool(data.get("my_hand", True))
+        cfg.my_plays = bool(data.get("my_plays", True))
         cfg.language = "en" if data.get("language") == "en" else "fr"
         cfg.hs_prefix = str(data.get("hs_prefix") or "")
         cfg.log_rotation = bool(data.get("log_rotation", False))
