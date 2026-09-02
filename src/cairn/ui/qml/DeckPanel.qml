@@ -80,13 +80,42 @@ Window {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 6
+                        // Le titre ouvre le choix du deck. Nécessaire hors
+                        // des files d'attente (parties amicales) : le jeu n'y
+                        // journalise pas la liste choisie, et la déduction par
+                        // les cartes ne tranche pas quand deux listes du joueur
+                        // se ressemblent trop — deux variantes d'un archétype.
                         Text {
+                            id: titreDeck
                             text: tracker.deckName
-                            color: root.text
+                                  + (tracker.forcedDeck !== "" ? "  ·" : "")
+                            color: choixDeck.hovered ? root.accent : root.text
                             font.pixelSize: 15
                             font.bold: true
                             elide: Text.ElideRight
                             Layout.fillWidth: true
+
+                            HoverHandler {
+                                id: choixDeck
+                                cursorShape: Qt.PointingHandCursor
+                                enabled: tracker.playerDecks.length > 0
+                            }
+                            TapHandler {
+                                enabled: choixDeck.enabled
+                                onTapped: menuDecks.popup()
+                            }
+                            Menu {
+                                id: menuDecks
+                                Repeater {
+                                    model: tracker.playerDecks
+                                    delegate: MenuItem {
+                                        required property string modelData
+                                        text: (modelData === tracker.forcedDeck
+                                               ? "\u2713  " : "     ") + modelData
+                                        onTriggered: tracker.forceDeck(modelData)
+                                    }
+                                }
+                            }
                         }
                         // bilan du deck : « le deck marche-t-il ? », à côté du
                         // matchup en dessous qui dit « ce duel est-il jouable ? »

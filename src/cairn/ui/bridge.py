@@ -33,7 +33,8 @@ from ..deck_refs import DeckRefs
 from ..counters import COUNTER_DEFS, compute_counters
 from ..decks_log import QueueParser, read_decks_log
 from ..families import all_checklists
-from ..deck_view import CLASS_FR, DeckView, compute_deck_view, opponent_class, pick_queued_deck
+from ..deck_view import (CLASS_FR, DeckView, compute_deck_view, identifier_deck,
+                         opponent_class, pick_queued_deck)
 from ..game_state import learn_own_account, round_number
 from ..history import History
 from ..hs_setup import (
@@ -170,6 +171,8 @@ class TrackerBridge(QObject):
         self._queue_parser = QueueParser()
         self._queue_events: list = []
         self._player_decks: list = []  # decks du joueur, pour la saisie manuelle
+        self._deck_force_nom = ""      # deck imposé pour la partie en cours
+        self._deck_force_partie = None  # la partie à laquelle ce choix se rapporte
         self._decks_tailer: LogTailer | None = None
         self._view = DeckView()
         self._deckstring = ""
@@ -595,6 +598,13 @@ class TrackerBridge(QObject):
             # combat » au relancement suivant.
             return
         deck = pick_queued_deck(self._queue_events, game)
+        if deck is None:
+            # Pas de mise en file : partie amicale. Le deck n'est écrit nulle
+            # part, mais les listes du joueur sont connues — on reconnaît la
+            # sienne à ce qui en sort. Un choix manuel, s'il a été fait, prime
+            # sur la déduction.
+            deck = self._deck_force(game) or identifier_deck(
+                game, self._player_decks, self._db)
         # gardé pour le bouton « copier le deckcode » : la vue ne retient que
         # le nom du deck, pas la chaîne d'origine
         self._deckstring = deck.deckstring if deck else ""
@@ -1113,6 +1123,43 @@ class TrackerBridge(QObject):
         self._history.delete_game(session, game_index)
         self._refresh_stats_models()
         self.changed.emit()
+
+    @Slot(str)
+    def forceDeck(self, name: str) -> None:
+        """Impose le deck de la partie en cours (re-clic = retour à l'auto).
+
+        Filet pour ce que la déduction ne peut pas trancher : deux listes trop
+        proches, ou une partie où rien de discriminant n'est encore sorti. Lié
+        à la partie courante, pas à la session : la suivante repart à zéro.
+        """
+        self._deck_force_nom = "" if name == self._deck_force_nom else name
+        self._view = DeckView()   # force le recalcul au prochain rafraîchissement
+        self.changed.emit()
+
+    def _deck_force(self, game):
+        """Le deck imposé par l'utilisateur, s'il correspond à cette partie."""
+        if not self._deck_force_nom or game is not self._deck_force_partie:
+            if game is not self._deck_force_partie:
+                self._deck_force_partie = game
+                self._deck_force_nom = ""
+            return None
+        return next(
+            (d for d in self._player_decks if d.name == self._deck_force_nom), None
+        )
+
+    @Property(str, notify=changed)
+    def forcedDeck(self):
+        return self._deck_force_nom
+
+    @Property("QStringList", notify=changed)
+    def playerDecks(self):
+        """Listes du joueur utilisables pour forcer le deck en cours.
+
+        Distinct de ``knownDecks``, qui sert à la saisie d'une partie passée et
+        contient aussi des noms venus de l'historique : ceux-là n'ont pas de
+        deckstring, donc les imposer n'afficherait aucune carte.
+        """
+        return [d.name for d in self._player_decks if d.deckstring]
 
     @Property("QStringList", notify=changed)
     def knownDecks(self):

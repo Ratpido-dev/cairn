@@ -9,7 +9,7 @@ longue session. À titre de comparaison, Firestone sous Wine tourne autour de 4 
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Qt](https://img.shields.io/badge/PySide6-Qt%20Quick-41CD52?logo=qt&logoColor=white)
 [![tests](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml/badge.svg)](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml)
-![Tests](https://img.shields.io/badge/tests-402%20verts-10B981)
+![Tests](https://img.shields.io/badge/tests-407%20verts-10B981)
 ![Licence](https://img.shields.io/badge/licence-MIT-F59E0B)
 ![Plateforme](https://img.shields.io/badge/Linux-Wayland%20%7C%20X11-0B0F17?logo=linux&logoColor=white)
 
@@ -319,7 +319,7 @@ la referme.
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -e . -r requirements.txt
-.venv/bin/python -m pytest                  # 402 tests
+.venv/bin/python -m pytest                  # 407 tests
 .venv/bin/python tools/panel.py --replay    # démo sans jouer, historique jetable
 .venv/bin/python tools/screenshot.py        # captures reproductibles, hors écran
 .venv/bin/python tools/stats.py             # winrates et dernières parties

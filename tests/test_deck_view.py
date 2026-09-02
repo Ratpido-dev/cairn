@@ -659,3 +659,72 @@ def test_partie_classee_prend_la_mise_en_file_precedente():
     events = [_queue("14:00:00.0000000", "Thief Priest"), _queue("19:59:00.0000000", "Attack Druid")]
     deck = pick_queued_deck(events, game)
     assert deck is not None and deck.name == "Attack Druid"
+
+
+# Deux listes RÉELLES de la même classe (même héros : « AAECAZirBA… »), donc
+# seules les cartes peuvent les départager — c'est ce que le test vérifie.
+DECKSTRING_A = ("AAECAZirBAjDgwf1pQfRpgeIvgeRxgeqyQek2QeU2wcL"
+                "s4cH+ZsHi7EH1rIHhsQHksQHrMYHndkHk9oHrdoH+d4HAAA=")
+DECKSTRING_B = ("AAECAZirBAaXoASzhweIvgfXwweRxgeT2gcM/Z4EheYGx4cHn5YH"
+                "6KUHi7EH1rIH1rwHhsQHksQHm8QHrMYHAAA=")
+
+
+# ---- reconnaissance du deck sans mise en file (partie amicale) -------------
+
+@pytest.fixture(scope="module")
+def _db_cartes():
+    from src.cairn.cards_db import CardsDb
+    return CardsDb.load()
+
+
+def _partie_avec(db, deckstring: str, piochees: int, hero_class: str = None):
+    """Une partie où le joueur 1 pioche les N premières cartes d'une liste."""
+    from src.cairn.deckstring import decode_deckstring
+    from src.cairn.game_state import Draw, Entity
+
+    d = decode_deckstring(deckstring)
+    game = Game(ts="10:00:00.0000000")
+    game.player_names = {1: "moi", 2: "lui"}
+    game.player_entity = {1: 1, 2: 2}
+    # héros : donne sa classe au joueur local
+    heros = db.by_dbf_id.get(d.heroes[0], {})
+    game.entities[99] = Entity(
+        entity_id=99, card_id=heros.get("id"),
+        tags={"CARDTYPE": "HERO", "CONTROLLER": "1"},
+    )
+    for i, (dbf, _n) in enumerate(d.cards[:piochees]):
+        carte = db.by_dbf_id.get(dbf, {})
+        game.events.append(Draw(player_id=1, entity_id=100 + i,
+                                card_id=carte.get("id"), during_mulligan=False))
+    return game
+
+
+def test_deck_reconnu_par_les_cartes_qui_en_sortent(_db_cartes):
+    """Le cas qui manquait : en amical, aucune mise en file n'est journalisée,
+    mais les listes du joueur sont connues — on reconnaît la sienne."""
+    from src.cairn.deck_view import identifier_deck
+    from src.cairn.decks_log import PlayerDeck
+
+    a = PlayerDeck(name="A", deck_id=1, deckstring=DECKSTRING_A)
+    b = PlayerDeck(name="B", deck_id=2, deckstring=DECKSTRING_B)
+    game = _partie_avec(_db_cartes, DECKSTRING_A, piochees=6)
+    trouve = identifier_deck(game, [a, b], _db_cartes)
+    assert trouve is not None and trouve.name == "A"
+
+
+def test_aucun_deck_rendu_tant_que_le_doute_subsiste(_db_cartes):
+    """Deux listes candidates et rien de discriminant : on se tait plutôt que
+    d'afficher un deck au hasard."""
+    from src.cairn.deck_view import identifier_deck
+    from src.cairn.decks_log import PlayerDeck
+
+    a = PlayerDeck(name="A", deck_id=1, deckstring=DECKSTRING_A)
+    meme = PlayerDeck(name="A bis", deck_id=2, deckstring=DECKSTRING_A)
+    game = _partie_avec(_db_cartes, DECKSTRING_A, piochees=4)
+    assert identifier_deck(game, [a, meme], _db_cartes) is None
+
+
+def test_sans_liste_connue_rien_n_est_invente(_db_cartes):
+    from src.cairn.deck_view import identifier_deck
+    game = _partie_avec(_db_cartes, DECKSTRING_A, piochees=6)
+    assert identifier_deck(game, [], _db_cartes) is None

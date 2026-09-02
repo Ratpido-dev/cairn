@@ -687,3 +687,48 @@ def test_rejeu_d_archive_jamais_abandonne():
     """En rejeu, les horodatages sont ceux d'un autre jour : appliquer le
     délai masquerait toute la partie."""
     assert _faux_pont(assume_running=True)._partie_abandonnee(_partie_a(99999)) is False
+
+
+# ---- choix manuel du deck -------------------------------------------------
+
+def test_deck_force_est_lie_a_la_partie_en_cours():
+    """Le choix ne doit pas déborder sur la partie suivante : sinon il devient
+    un réglage caché, et le deck d'hier revient sur la partie d'aujourd'hui —
+    exactement le bug qu'on vient de corriger dans l'autre sens."""
+    from src.cairn.ui.bridge import TrackerBridge
+    from src.cairn.decks_log import PlayerDeck
+    from src.cairn.game_state import Game
+
+    class Faux:
+        _deck_force = TrackerBridge._deck_force
+        _deck_force_nom = "A"
+        _deck_force_partie = None
+        _player_decks = [PlayerDeck(name="A", deck_id=1, deckstring="AAE")]
+
+    pont, partie = Faux(), Game(ts="10:00:00.0000000")
+
+    # première partie : le choix ne vaut que pour elle, il faut l'y rattacher
+    assert pont._deck_force(partie) is None      # rattachement, choix effacé
+    pont._deck_force_nom = "A"
+    trouve = pont._deck_force(partie)
+    assert trouve is not None and trouve.name == "A"
+
+    # partie suivante : retour à la déduction automatique
+    assert pont._deck_force(Game(ts="11:00:00.0000000")) is None
+    assert pont._deck_force_nom == ""
+
+
+def test_seuls_les_decks_avec_liste_sont_proposes():
+    """`knownDecks` contient aussi des noms venus de l'historique, sans
+    deckstring : les imposer n'afficherait aucune carte."""
+    from src.cairn.ui.bridge import TrackerBridge
+    from src.cairn.decks_log import PlayerDeck
+
+    class Faux:
+        playerDecks = TrackerBridge.playerDecks.fget
+        _player_decks = [
+            PlayerDeck(name="avec", deck_id=1, deckstring="AAECAQ=="),
+            PlayerDeck(name="sans", deck_id=2, deckstring=""),
+        ]
+
+    assert Faux.playerDecks(Faux()) == ["avec"]

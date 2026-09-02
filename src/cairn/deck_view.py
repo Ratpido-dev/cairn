@@ -316,6 +316,62 @@ def pick_queued_deck(queue_events: list[QueueEvent], game: Game) -> PlayerDeck |
     return (before[-1] if before else queue_events[-1]).deck
 
 
+def identifier_deck(game: Game, decks, db: CardsDb) -> PlayerDeck | None:
+    """Reconnaît le deck joué parmi les listes connues, sans mise en file.
+
+    Une partie amicale n'écrit aucun « Finding Game With Deck » (cf.
+    ``pick_queued_deck``). Mais le joueur a ses propres listes, EXACTES, dans
+    ``Decks.log`` : il suffit de regarder ce qui sort du deck et d'éliminer
+    celles qui ne le contiennent pas. C'est le même raisonnement que pour
+    l'archétype adverse, en beaucoup plus sûr — là-bas les listes sont des
+    suppositions, ici ce sont les siennes.
+
+    Deux garde-fous, tous deux dans le sens « se taire plutôt que mentir » :
+
+    * tant qu'il reste plusieurs candidats, on ne rend rien. Afficher un deck
+      au hasard entre deux listes proches vaut moins que ne rien afficher ;
+    * une carte qu'aucun candidat ne contient est ignorée au lieu de tout
+      éliminer : elle vient d'un effet qui a ajouté une carte au deck en cours
+      de partie, ce qui ne dit rien de la liste de départ.
+    """
+    local = game.local_player_id()
+    if local is None or not decks:
+        return None
+
+    klass = player_class(game, db, local)
+    candidats: list[tuple[PlayerDeck, set[int]]] = []
+    for deck in decks:
+        if not deck.deckstring:
+            continue
+        try:
+            decode = decode_deckstring(deck.deckstring)
+        except DeckstringError:
+            continue
+        if klass:
+            heros = db.by_dbf_id.get(decode.heroes[0]) if decode.heroes else None
+            if heros and heros.get("cardClass") != klass:
+                continue
+        candidats.append((deck, {dbf for dbf, _ in decode.cards}))
+
+    if not candidats:
+        return None
+
+    for event in game.events:
+        if len(candidats) == 1:
+            break
+        if not isinstance(event, Draw) or event.player_id != local:
+            continue
+        carte = db.by_card_id.get(event.card_id or "")
+        dbf = carte.get("dbfId") if carte else None
+        if dbf is None:
+            continue
+        restants = [(d, cartes) for d, cartes in candidats if dbf in cartes]
+        if restants:              # sinon : carte entrée en cours de partie
+            candidats = restants
+
+    return candidats[0][0] if len(candidats) == 1 else None
+
+
 def _group(rows: list, key=lambda r: (r.card_id, getattr(r, "origin", ""))) -> list:
     """Regroupe des lignes identiques en incrémentant leur compteur."""
     grouped: dict = {}
