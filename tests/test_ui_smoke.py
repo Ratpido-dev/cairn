@@ -645,3 +645,45 @@ def test_changer_de_ligue_ne_change_pas_le_palier(tmp_path, monkeypatch):
     finally:
         del engine
         bridge.shutdown()
+
+
+# ---- partie perdue par déconnexion ----------------------------------------
+
+def _faux_pont(assume_running: bool = False):
+    """Le calcul d'abandon seul, sans monter tout le pont Qt."""
+    from src.cairn.ui.bridge import TrackerBridge
+
+    class Faux:
+        SILENCE_ABANDON_S = TrackerBridge.SILENCE_ABANDON_S
+        _assume_running = assume_running
+        _partie_abandonnee = TrackerBridge._partie_abandonnee
+
+    return Faux()
+
+
+def _partie_a(secondes_avant: int):
+    """Une partie dont la dernière ligne de journal date d'il y a N secondes."""
+    from datetime import datetime, timedelta
+    from src.cairn.game_state import Game
+
+    t = datetime.now() - timedelta(seconds=secondes_avant)
+    return Game(ts=t.strftime("%H:%M:%S.0000000"),
+                last_ts=t.strftime("%H:%M:%S.0000000"))
+
+
+def test_partie_coupee_par_une_deconnexion_est_abandonnee():
+    """Une déconnexion n'écrit jamais STATE=COMPLETE : le journal s'arrête net.
+    Sans garde-fou les panneaux restaient au-dessus du menu principal."""
+    assert _faux_pont()._partie_abandonnee(_partie_a(600)) is True
+
+
+def test_partie_vivante_n_est_pas_abandonnee():
+    """Hearthstone écrit en continu pendant une partie : quelques secondes de
+    silence sont normales, trois minutes ne le sont pas."""
+    assert _faux_pont()._partie_abandonnee(_partie_a(20)) is False
+
+
+def test_rejeu_d_archive_jamais_abandonne():
+    """En rejeu, les horodatages sont ceux d'un autre jour : appliquer le
+    délai masquerait toute la partie."""
+    assert _faux_pont(assume_running=True)._partie_abandonnee(_partie_a(99999)) is False

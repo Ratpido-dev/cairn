@@ -25,6 +25,7 @@ import subprocess
 import sys
 import threading
 import time
+from datetime import datetime
 
 from ..cards_db import CardsDb
 from ..config import Config, LEAGUES
@@ -1788,6 +1789,37 @@ class TrackerBridge(QObject):
         return game.current_player is not None \
             and game.current_player == game.local_player_id()
 
+    # Une partie perdue par déconnexion ne reçoit JAMAIS son STATE=COMPLETE :
+    # le journal s'arrête net, au milieu d'un tour. Sans ce garde-fou les
+    # panneaux restaient affichés par-dessus le menu principal, pour une partie
+    # finie depuis longtemps — constaté après une coupure de connexion.
+    #
+    # Le silence du journal est le seul signal disponible. Il est fiable :
+    # Hearthstone y écrit en continu pendant une partie, ne serait-ce que les
+    # options proposées à chaque instant ; trois minutes sans une ligne ne
+    # peuvent pas arriver dans une partie vivante, la corde force à jouer.
+    #
+    # Rien n'est marqué comme terminé pour autant : la partie reste incomplète
+    # dans le moteur, donc elle n'entrera pas dans l'historique sans résultat.
+    SILENCE_ABANDON_S = 180
+
+    def _partie_abandonnee(self, game) -> bool:
+        if self._assume_running:
+            return False   # rejeu d'archive : les horodatages sont d'un autre jour
+        dernier = game.last_ts or game.ts
+        if not dernier:
+            return False
+        try:
+            h, m, s = (int(x) for x in dernier[:8].split(":"))
+        except ValueError:
+            return False
+        maintenant = datetime.now()
+        ecart = maintenant.hour * 3600 + maintenant.minute * 60 + maintenant.second \
+            - (h * 3600 + m * 60 + s)
+        if ecart < 0:
+            ecart += 86400   # le journal a franchi minuit
+        return ecart > self.SILENCE_ABANDON_S
+
     @Property(str, notify=changed)
     def myThinkTime(self):
         """Temps de réflexion cumulé du joueur local sur la partie."""
@@ -1818,6 +1850,8 @@ class TrackerBridge(QObject):
             return False  # on regarde la partie d'un contact : pas la nôtre
         if game.is_deckless_mode():
             return False  # Champ de bataille, Mercenaires : rien à suivre
+        if self._partie_abandonnee(game):
+            return False
         return not game.complete
 
     @Property(bool, notify=changed)
