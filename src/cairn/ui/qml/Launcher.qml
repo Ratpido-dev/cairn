@@ -1374,6 +1374,25 @@ Window {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: tracker.selectDeck(model.name)
+
+                                // Forme des parties : un deck qui gagne court
+                                // et perd long ne se joue pas comme celui qui
+                                // fait l'inverse, et le winrate seul ne le dit
+                                // jamais. En infobulle plutôt qu'en colonne :
+                                // on le consulte, on ne le parcourt pas.
+                                ToolTip.visible: containsMouse
+                                                 && (model.shapeWin !== ""
+                                                     || model.shapeLoss !== "")
+                                ToolTip.delay: 350
+                                ToolTip.text:
+                                    (model.shapeWin !== ""
+                                     ? (tracker.language === "en" ? "Wins: " : "Victoires : ")
+                                       + model.shapeWin : "")
+                                    + (model.shapeWin !== "" && model.shapeLoss !== ""
+                                       ? "\n" : "")
+                                    + (model.shapeLoss !== ""
+                                       ? (tracker.language === "en" ? "Losses: " : "Défaites : ")
+                                         + model.shapeLoss : "")
                             }
                             RowLayout {
                                 anchors.fill: parent

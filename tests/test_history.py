@@ -286,3 +286,35 @@ def test_session_de_jour_inchangee(history, games_and_queue):
     history.record("Hearthstone_2026_08_01_00_06_06", 0, games[0], None)
     (row,) = history.recent(limit=1)
     assert row[0] == "2026-08-01"
+
+
+def test_forme_des_victoires_et_des_defaites(history, games_and_queue):
+    """Un deck qui gagne court et perd long ne se joue pas comme celui qui fait
+    l'inverse. Le winrate ne dit jamais ça — d'où les moyennes séparées."""
+    games, queue = games_and_queue
+    deck = pick_queued_deck(queue, games[0])
+    history.record(FIXTURE_DIR.name, 0, games[0], deck)
+
+    (stats,) = [s for s in history.deck_stats() if s.games]
+    gagnee = games[0].results.get(games[0].player_names[games[0].local_player_id()]) == "WON"
+    if gagnee:
+        assert stats.avg_rounds_win > 0 and stats.avg_duration_win_s > 0
+        assert stats.avg_rounds_loss == 0   # aucune défaite enregistrée
+    else:
+        assert stats.avg_rounds_loss > 0 and stats.avg_duration_loss_s > 0
+        assert stats.avg_rounds_win == 0
+
+
+def test_concession_de_depart_exclue_des_moyennes(history, games_and_queue):
+    """Un adversaire qui abandonne au tour 2 n'a pas joué : compter cette
+    partie tirerait toutes les moyennes vers le bas et ferait passer un deck
+    lent pour un deck rapide."""
+    games, queue = games_and_queue
+    g = games[0]
+    g.conceded_by = next(iter(g.results))
+    g.conceded_turn = 2
+    history.record(FIXTURE_DIR.name, 0, g, pick_queued_deck(queue, g))
+
+    (stats,) = [s for s in history.deck_stats() if s.games]
+    assert stats.avg_rounds_win == 0 and stats.avg_rounds_loss == 0
+    assert stats.avg_duration_win_s == 0 and stats.avg_duration_loss_s == 0

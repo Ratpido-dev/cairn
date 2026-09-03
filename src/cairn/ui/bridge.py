@@ -90,6 +90,23 @@ def _counter_rows(counters, lang: str) -> list[dict]:
     return list(lignes.values())
 
 
+def _fmt_forme(manches: int, secondes: int, lang: str) -> str:
+    """« 7 manches · 7:17 » — la forme d'une victoire ou d'une défaite.
+
+    Vide quand rien n'a encore été mesuré : mieux vaut une ligne absente
+    qu'un « 0 manche » qui se lit comme une donnée.
+    """
+    if not manches and not secondes:
+        return ""
+    mot = "turns" if lang == "en" else "manches"
+    bouts = []
+    if manches:
+        bouts.append(f"{manches} {mot}")
+    if secondes:
+        bouts.append(f"{secondes // 60}:{secondes % 60:02d}")
+    return " · ".join(bouts)
+
+
 def _fmt_minutes(seconds: int | None) -> str:
     """Durée MOYENNE d'une partie, arrondie à la minute : « 12 min ».
 
@@ -274,7 +291,10 @@ class TrackerBridge(QObject):
             ["label", "key", "wins", "losses", "pct", "duration"], self
         )
         self._deck_stats_model = _ListModel(
-            ["name", "wins", "games", "pct", "duration"], self)
+            ["name", "wins", "games", "pct", "duration",
+             # forme des victoires et des défaites : un deck qui gagne court et
+             # perd long ne se joue pas comme celui qui fait l'inverse
+             "shapeWin", "shapeLoss"], self)
         # part du camembert : archétype adverse, sa taille et son winrate
         self._archetype_model = _ListModel(
             ["label", "games", "wins", "pct", "share", "duration", "known", "slot"],
@@ -1011,6 +1031,7 @@ class TrackerBridge(QObject):
 
     def _refresh_stats_models(self) -> None:
         deck = self._selected_deck or None
+        lang = self._config.language
         self._class_stats_model.replace(
             [
                 {
@@ -1053,6 +1074,8 @@ class TrackerBridge(QObject):
                     "games": s.games,
                     "pct": round(100 * s.winrate),
                     "duration": _fmt_minutes(s.avg_duration_s),
+                    "shapeWin": _fmt_forme(s.avg_rounds_win, s.avg_duration_win_s, lang),
+                    "shapeLoss": _fmt_forme(s.avg_rounds_loss, s.avg_duration_loss_s, lang),
                 }
                 for s in self._history.deck_stats()
             ]

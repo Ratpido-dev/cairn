@@ -13,7 +13,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from .decks_log import PlayerDeck
-from .game_state import Game
+from .game_state import Game, round_number
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS games (
@@ -45,6 +45,16 @@ class DeckStats:
     wins: int
     # Durée moyenne d'une partie, en secondes. 0 = aucune partie chronométrée.
     avg_duration_s: int = 0
+    # Les mêmes, séparées par issue. Une victoire et une défaite n'ont pas la
+    # même forme : un deck agressif gagne court et perd long, un deck de
+    # contrôle l'inverse. La moyenne des deux mélangées ne dit rien de ça, et
+    # c'est pourtant ce qui indique comment le deck perd ses parties.
+    # En MANCHES telles que le joueur les compte (cf. round_number), pas en
+    # tours bruts : le tag TURN de Hearthstone en compte deux par manche.
+    avg_rounds_win: int = 0
+    avg_rounds_loss: int = 0
+    avg_duration_win_s: int = 0
+    avg_duration_loss_s: int = 0
 
     @property
     def winrate(self) -> float:
@@ -264,17 +274,28 @@ class History:
         return (row[0] or 0, row[1] or 0)
 
     def deck_stats(self) -> list[DeckStats]:
+        # « vraie partie » : chronométrée, et pas une concession de départ.
+        # Sans ce filtre, un adversaire qui abandonne au tour 2 tire toutes les
+        # moyennes vers le bas et fait passer un deck lent pour un deck rapide.
+        vraie = "duration_s > 0 AND NOT (conceded != '' AND conceded_turn <= 2)"
         rows = self._conn.execute(
-            """SELECT COALESCE(deck_name, '?'), COUNT(*),
+            f"""SELECT COALESCE(deck_name, '?'), COUNT(*),
                       SUM(CASE WHEN result = 'WON' THEN 1 ELSE 0 END),
-                      AVG(CASE WHEN duration_s > 0 AND NOT (conceded != '' AND conceded_turn <= 2)
-                                    THEN duration_s END)
+                      AVG(CASE WHEN {vraie} THEN duration_s END),
+                      AVG(CASE WHEN result = 'WON'  AND turns > 0 AND {vraie} THEN turns END),
+                      AVG(CASE WHEN result = 'LOST' AND turns > 0 AND {vraie} THEN turns END),
+                      AVG(CASE WHEN result = 'WON'  AND {vraie} THEN duration_s END),
+                      AVG(CASE WHEN result = 'LOST' AND {vraie} THEN duration_s END)
                FROM games WHERE archived = 0
                GROUP BY deck_name ORDER BY COUNT(*) DESC"""
         ).fetchall()
         return [
             DeckStats(deck_name=r[0], games=r[1], wins=r[2] or 0,
-                      avg_duration_s=int(r[3] or 0))
+                      avg_duration_s=int(r[3] or 0),
+                      avg_rounds_win=round_number(int(r[4])) if r[4] else 0,
+                      avg_rounds_loss=round_number(int(r[5])) if r[5] else 0,
+                      avg_duration_win_s=int(r[6] or 0),
+                      avg_duration_loss_s=int(r[7] or 0))
             for r in rows
         ]
 
