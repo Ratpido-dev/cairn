@@ -24,6 +24,20 @@ Window {
     color: "transparent"
     flags: Qt.Dialog | Qt.FramelessWindowHint
 
+    // Fermer la fenêtre sans choisir vaut REFUS, et la question ne se repose
+    // plus. Deux raisons : un consentement doit être un acte positif — pas de
+    // réponse veut donc dire non, rien ne part —, et reposer la question à
+    // chaque lancement transforme un choix en harcèlement. C'est exactement ce
+    // qui se passait : la fenêtre se fermait sans rien enregistrer, et
+    // revenait au démarrage suivant.
+    // `tracker` est testé : à l'extinction de l'application le contexte est
+    // détruit AVANT que les fenêtres ne se ferment, et l'appel partait alors
+    // sur un objet nul.
+    onClosing: function (close) {
+        if (tracker && !tracker.consentAsked)
+            tracker.answerConsent(false)
+    }
+
     readonly property bool en: tracker.language === "en"
     // palette : voir Theme.qml (source unique du design system)
     readonly property Theme thm: Theme {}

@@ -732,3 +732,123 @@ def test_seuls_les_decks_avec_liste_sont_proposes():
         ]
 
     assert Faux.playerDecks(Faux()) == ["avec"]
+
+
+# ---- instance unique ------------------------------------------------------
+
+def test_second_lancement_detecte_le_premier():
+    """Cliquer une deuxième fois sur l'icône est le geste le plus naturel quand
+    les panneaux sont cachés derrière le jeu. Sans verrou, ça posait dix
+    fenêtres de plus, chacune avec son propre suivi du journal."""
+    from PySide6.QtCore import QCoreApplication
+    from PySide6.QtNetwork import QLocalServer
+
+    from src.cairn.app import _VERROU, _instance_deja_lancee
+
+    QCoreApplication.instance() or QCoreApplication([])
+    QLocalServer.removeServer(_VERROU)
+
+    assert _instance_deja_lancee() is False
+    serveur = QLocalServer()
+    assert serveur.listen(_VERROU)
+    try:
+        assert _instance_deja_lancee() is True
+    finally:
+        serveur.close()
+    assert _instance_deja_lancee() is False
+
+
+def test_verrou_ne_survit_pas_a_un_plantage():
+    """Un fichier de verrou oublié bloquerait tous les lancements suivants —
+    pire que le problème qu'il résout. Le socket meurt avec le processus, et
+    un reste éventuel est repris sans erreur."""
+    from PySide6.QtCore import QCoreApplication
+    from PySide6.QtNetwork import QLocalServer
+
+    from src.cairn.app import _VERROU
+
+    QCoreApplication.instance() or QCoreApplication([])
+    mort = QLocalServer()
+    mort.listen(_VERROU)
+    del mort   # comme un processus tué sans fermeture propre
+
+    QLocalServer.removeServer(_VERROU)
+    neuf = QLocalServer()
+    assert neuf.listen(_VERROU), "un verrou orphelin bloque le relancement"
+    neuf.close()
+
+
+def test_fermer_le_consentement_vaut_refus(tmp_path, monkeypatch):
+    """Fermer la fenêtre sans choisir doit valoir REFUS — et la question ne
+    doit plus revenir. Sans ça elle se reposait à chaque lancement, ce qui
+    transforme un choix en harcèlement ; et un consentement non donné ne peut
+    pas se lire comme un accord."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+
+    from PySide6.QtCore import QUrl
+    from PySide6.QtGui import QGuiApplication
+    from PySide6.QtQml import QQmlApplicationEngine
+    from PySide6.QtQuick import QQuickWindow  # noqa: F401
+
+    from src.cairn.app import QML_DIR
+    from src.cairn.ui.bridge import TrackerBridge
+
+    QGuiApplication.instance() or QGuiApplication([])
+    bridge = TrackerBridge()
+    try:
+        assert bridge.consentAsked is False        # jamais posée
+        engine = QQmlApplicationEngine()
+        engine.rootContext().setContextProperty("tracker", bridge)
+        engine.load(QUrl.fromLocalFile(str(QML_DIR / "Consent.qml")))
+        fenetre = engine.rootObjects()[0]
+        assert fenetre.property("visible") is True
+
+        fenetre.close()
+
+        assert bridge.consentAsked is True         # la question est réglée
+        assert bridge.shareGames is False          # et rien ne partira
+        del engine
+    finally:
+        bridge.shutdown()
+
+
+def test_second_lancement_ne_rouvre_que_le_launcher(tmp_path, monkeypatch):
+    """Réveiller TOUTES les fenêtres rappelait la question du partage à chaque
+    re-clic sur l'icône : `show()` écrase la liaison `visible:` qui la gardait
+    masquée. Seul le launcher doit être ramené au premier plan."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+
+    from PySide6.QtCore import QUrl
+    from PySide6.QtGui import QGuiApplication
+    from PySide6.QtQml import QQmlApplicationEngine
+    from PySide6.QtQuick import QQuickWindow  # noqa: F401
+
+    from src.cairn.app import LAUNCHER_TITRE, QML_DIR, _poser_le_verrou
+    from src.cairn.ui.bridge import TrackerBridge
+
+    app = QGuiApplication.instance() or QGuiApplication([])
+    bridge = TrackerBridge()
+    bridge.answerConsent(True)          # la question est réglée
+    try:
+        engine = QQmlApplicationEngine()
+        engine.rootContext().setContextProperty("tracker", bridge)
+        for nom in ("Launcher.qml", "Consent.qml"):
+            engine.load(QUrl.fromLocalFile(str(QML_DIR / nom)))
+
+        fenetres = {str(o.property("title") or ""): o for o in engine.rootObjects()}
+        consentement = next(o for t, o in fenetres.items() if "partage" in t)
+        assert consentement.property("visible") is False
+
+        verrou = _poser_le_verrou(app, engine)
+        try:
+            # ce que fait un second lancement, sans passer par le socket
+            for o in engine.rootObjects():
+                if o.property("title") == LAUNCHER_TITRE:
+                    o.show()
+            assert consentement.property("visible") is False, \
+                "la question du partage réapparaît à chaque re-lancement"
+        finally:
+            verrou.close()
+        del engine
+    finally:
+        bridge.shutdown()

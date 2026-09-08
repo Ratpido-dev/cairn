@@ -65,8 +65,78 @@ def ensure_cards(verbose: bool = True) -> bool:
     return True
 
 
+# Nom du verrou d'instance unique. Sous Wayland il porte le même identifiant
+# que l'app_id, ce qui le rend prévisible sans dépendre du chemin d'install.
+_VERROU = "cairn-instance"
+
+# Titre du launcher, tel que Launcher.qml le pose. C'est la SEULE fenêtre
+# qu'un second lancement doit ramener au premier plan.
+LAUNCHER_TITRE = "Cairn — launcher"
+
+
+def _instance_deja_lancee() -> bool:
+    """Vrai si un Cairn tourne déjà — et on lui demande de se montrer.
+
+    Un second lancement posait dix fenêtres de plus par-dessus les premières,
+    chacune avec son propre suivi du journal : deux fois le travail, deux fois
+    la mémoire, et des règles KWin qui ne savaient plus quelle fenêtre placer.
+    Cliquer une deuxième fois sur l'icône est pourtant le geste le plus naturel
+    du monde quand les panneaux sont cachés derrière le jeu.
+
+    Un socket local plutôt qu'un fichier de verrou : un fichier survit à un
+    plantage et bloque alors tous les lancements suivants, ce qui est pire que
+    le problème qu'il résout. Le socket, lui, meurt avec le processus.
+    """
+    from PySide6.QtNetwork import QLocalSocket
+
+    sonde = QLocalSocket()
+    sonde.connectToServer(_VERROU)
+    if not sonde.waitForConnected(300):
+        return False
+    sonde.write(b"montre-toi")
+    sonde.waitForBytesWritten(300)
+    sonde.disconnectFromServer()
+    return True
+
+
+def _poser_le_verrou(app, engine) -> object:
+    """Ouvre le socket d'instance et remet les fenêtres au premier plan quand
+    un second lancement s'annonce. Rend le serveur, à garder en vie."""
+    from PySide6.QtNetwork import QLocalServer
+
+    QLocalServer.removeServer(_VERROU)   # reste d'un plantage précédent
+    serveur = QLocalServer(app)
+
+    def _reveiller():
+        client = serveur.nextPendingConnection()
+        if client is not None:
+            client.disconnectFromServer()
+        # UNIQUEMENT le launcher. Les autres fenêtres — panneaux, widgets,
+        # consentement — ont une visibilité pilotée par une liaison QML, et
+        # ``show()`` l'écrase : réveiller tout le monde faisait réapparaître la
+        # question du partage à chaque re-clic sur l'icône, alors qu'elle avait
+        # déjà été répondue. Les panneaux, eux, doivent rester régis par « une
+        # partie est-elle en cours ».
+        for fenetre in engine.rootObjects():
+            if fenetre.property("title") != LAUNCHER_TITRE:
+                continue
+            # Sous Wayland un client ne peut pas se donner le focus ; montrer
+            # la fenêtre et la relever est tout ce qui est permis.
+            fenetre.show()
+            fenetre.raise_()
+            fenetre.requestActivate()
+
+    serveur.newConnection.connect(_reveiller)
+    serveur.listen(_VERROU)
+    return serveur
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv if argv is None else argv)
+
+    if _instance_deja_lancee():
+        print("Cairn est déjà lancé.", file=sys.stderr)
+        return 0
 
     if not ensure_cards():
         return 1
@@ -97,7 +167,10 @@ def main(argv: list[str] | None = None) -> int:
         print("Échec de chargement de l'interface QML.", file=sys.stderr)
         return 1
 
+    verrou = _poser_le_verrou(app, engine)   # à garder en vie : sinon le
+    # socket se ferme et un second lancement repart de plus belle
     code = app.exec()
+    verrou.close()
     del engine  # détruire le moteur AVANT le pont (contexte null sinon)
     bridge.shutdown()
     return code
