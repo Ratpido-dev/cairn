@@ -199,6 +199,14 @@ FloatingWindow {
     // Une pastille survolée sans rien à montrer (carte inconnue, pas de
     // créatrice) garde quand même son infobulle : c'est le rôle de `note`.
     CardPreview {
+        // Rattachée à la fenêtre qui l'ouvre. Sous Wayland un client ne
+        // choisit pas son écran, mais le compositeur place une fenêtre
+        // TRANSITOIRE près de son parent — c'est le seul moyen pour un aperçu
+        // d'atterrir sur le même écran que son panneau. Sans ça, sur un poste
+        // à deux écrans, les panneaux se déplacent à la main mais pas les
+        // aperçus : ils portent WindowTransparentForInput, la souris les
+        // traverse et on ne peut pas les attraper (issue #1).
+        transientParent: hand
         visible: hand.visible && (hand.hoverCard !== "" || hand.hoverNote !== "")
         title: "Cairn · aperçu main"
         cardId: hand.hoverCard

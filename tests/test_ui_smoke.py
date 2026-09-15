@@ -852,3 +852,36 @@ def test_second_lancement_ne_rouvre_que_le_launcher(tmp_path, monkeypatch):
         del engine
     finally:
         bridge.shutdown()
+
+
+def test_les_apercus_sont_rattaches_a_leur_panneau():
+    """Sous Wayland un client ne choisit pas son écran : seule une fenêtre
+    TRANSITOIRE est placée par le compositeur près de son parent. Sans ce lien,
+    sur un poste à deux écrans, les aperçus restent sur l'écran principal
+    pendant que les panneaux sont ailleurs — et on ne peut pas les y traîner,
+    ils sont transparents aux clics (issue #1)."""
+    from PySide6.QtCore import QUrl
+    from PySide6.QtGui import QGuiApplication
+    from PySide6.QtQml import QQmlApplicationEngine
+    from PySide6.QtQuick import QQuickWindow  # noqa: F401
+
+    from src.cairn.app import QML_DIR
+    from src.cairn.ui.bridge import TrackerBridge
+
+    QGuiApplication.instance() or QGuiApplication([])
+    bridge = TrackerBridge()
+    try:
+        for nom in ("DeckPanel.qml", "OppPanel.qml", "SecretsPopup.qml", "OppHandDots.qml"):
+            engine = QQmlApplicationEngine()
+            engine.rootContext().setContextProperty("tracker", bridge)
+            engine.load(QUrl.fromLocalFile(str(QML_DIR / nom)))
+            fenetre = engine.rootObjects()[0]
+            apercus = [e for e in fenetre.findChildren(QQuickWindow)
+                       if str(e.property("title") or "").startswith("Cairn · aperçu")]
+            assert apercus, f"aucun aperçu trouvé dans {nom}"
+            for a in apercus:
+                assert a.transientParent() is fenetre, \
+                    f"{nom} : l'aperçu n'est pas rattaché à son panneau"
+            del engine
+    finally:
+        bridge.shutdown()
