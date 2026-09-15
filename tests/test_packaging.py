@@ -173,13 +173,17 @@ def test_version_du_code_egale_celle_du_paquet():
     """X-Cairn-Version part avec chaque partie partagée : elle doit dire vrai.
 
     Elle est restée à 0.0.1 jusqu'à la 1.0.2 incluse, faute de ce test.
+    Lecture par expression régulière et non par tomllib, qui n'existe qu'à
+    partir de Python 3.11 : Cairn supporte 3.10, et la CI le teste.
     """
-    import tomllib
-
-    projet = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    texte = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    projet = re.search(r"^\[project\]$(.*?)(?=^\[|\Z)", texte, re.M | re.S)
+    assert projet, "section [project] introuvable dans pyproject.toml"
+    version = re.search(r'^version\s*=\s*"([^"]+)"', projet.group(1), re.M)
+    assert version, "clé version introuvable dans [project]"
     from src.cairn import __version__
 
-    assert __version__ == projet["project"]["version"]
+    assert __version__ == version.group(1)
 
 
 def test_installateur_recharge_le_script_kwin():
