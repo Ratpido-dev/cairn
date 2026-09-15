@@ -272,3 +272,51 @@ def test_modes_a_deck_non_filtres():
                  "GT_PVPDR", None, ""):
         game = Game(game_type=mode)
         assert game.is_deckless_mode() is False, mode
+
+
+# ---- reconnexion en cours de partie ---------------------------------------
+
+def _create_game(seed: str, tour: str | None = None) -> list[str]:
+    """Un bloc CREATE_GAME. Avec ``tour``, c'est l'état republié d'une reprise."""
+    lignes = [
+        L + "CREATE_GAME",
+        L + "    GameEntity EntityID=1",
+        L + "        tag=CARDTYPE value=GAME",
+    ]
+    if tour is not None:
+        lignes += [
+            L + "        tag=STATE value=RUNNING",
+            L + f"        tag=TURN value={tour}",
+        ]
+    lignes.append(L + f"        tag=GAME_SEED value={seed}")
+    return lignes
+
+
+def test_reconnexion_ne_cree_pas_une_deuxieme_partie():
+    """Après une déconnexion, Hearthstone réécrit un CREATE_GAME complet avec
+    l'état courant — tour 18, mulligan fait. Vu du journal c'est indiscernable
+    d'un vrai début, et Cairn repartait d'un deck intact au milieu d'une
+    partie. La graine, elle, est republiée à l'identique."""
+    games = run(
+        *_create_game("1492862545"),
+        L + "TAG_CHANGE Entity=GameEntity tag=TURN value=17",
+        *_create_game("1492862545", tour="18"),
+        L + "TAG_CHANGE Entity=GameEntity tag=TURN value=19",
+    )
+    assert len(games) == 1, "la reconnexion a créé une seconde partie"
+    assert games[0].turns == 19       # le suivi continue, il ne repart pas
+    assert games[0].game_seed == "1492862545"
+
+
+def test_deux_vraies_parties_restent_distinctes():
+    """Une nouvelle partie tire une autre graine : elle ne doit surtout pas
+    être absorbée dans la précédente."""
+    games = run(
+        *_create_game("111"),
+        L + "TAG_CHANGE Entity=GameEntity tag=TURN value=8",
+        *_create_game("222"),
+        L + "TAG_CHANGE Entity=GameEntity tag=TURN value=3",
+    )
+    assert len(games) == 2
+    assert [g.game_seed for g in games] == ["111", "222"]
+    assert [g.turns for g in games] == [8, 3]

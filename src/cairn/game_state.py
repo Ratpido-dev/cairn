@@ -164,6 +164,11 @@ def _ts_seconds(ts: str) -> float:
 class Game:
     ts: str | None = None  # horodatage du CREATE_GAME (HH:MM:SS.fffffff)
     last_ts: str | None = None  # dernier horodatage vu → durée de la partie
+    # Graine de la partie, telle que Hearthstone la publie sur le GameEntity.
+    # Elle identifie une partie de façon unique et, surtout, elle est REPUBLIÉE
+    # à l'identique quand on se reconnecte : c'est ce qui permet de reconnaître
+    # une reprise d'un vrai nouveau départ (cf. _apply_entity_def).
+    game_seed: str | None = None
     game_type: str | None = None
     format_type: str | None = None
     player_names: dict[int, str] = field(default_factory=dict)
@@ -345,7 +350,38 @@ class GameStateEngine:
         elif isinstance(event, ShuffleDeck):
             pass
 
+    def _peut_etre_une_reprise(self, game: Game, seed: str | None) -> Game:
+        """Rattache un CREATE_GAME republié à la partie qu'il reprend.
+
+        Après une déconnexion, Hearthstone ne reprend pas là où il s'était
+        arrêté : il réécrit un CREATE_GAME complet, avec tout l'état courant —
+        tour 18, mulligan fait, neuf cristaux. Vu du journal, c'est
+        indiscernable d'un vrai début, et Cairn repartait donc d'un deck
+        intact au milieu d'une partie.
+
+        La graine tranche : elle est republiée À L'IDENTIQUE, alors qu'une
+        vraie nouvelle partie en tire une autre. Deux CREATE_GAME de même
+        graine sont donc la même partie, et on jette le doublon plutôt que de
+        perdre tout ce qu'on avait suivi — pioches et cartes jouées comprises.
+        """
+        if not seed:
+            return game
+        if game.game_seed is None:
+            game.game_seed = seed
+        if len(self.games) < 2 or self.games[-1] is not game:
+            return game
+        precedente = self.games[-2]
+        if precedente.game_seed != seed or precedente.complete:
+            return game
+        # même partie : on revient sur la précédente et on oublie le doublon
+        self.games.pop()
+        self._game = precedente
+        self._player_entity = dict(precedente.player_entity)
+        return precedente
+
     def _apply_entity_def(self, game: Game, ed: EntityDef) -> None:
+        if ed.kind == "game":
+            game = self._peut_etre_une_reprise(game, ed.tags.get("GAME_SEED"))
         if ed.kind == "player" and ed.player_id is not None and ed.entity_id is not None:
             self._player_entity[ed.player_id] = ed.entity_id
             game.player_entity[ed.player_id] = ed.entity_id

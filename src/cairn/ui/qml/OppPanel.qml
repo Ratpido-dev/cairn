@@ -251,6 +251,14 @@ Window {
 
     // ---- aperçu de carte au survol (à droite du panneau adversaire) -------
     CardPreview {
+        // Rattachée à la fenêtre qui l'ouvre. Sous Wayland un client ne
+        // choisit pas son écran, mais le compositeur place une fenêtre
+        // TRANSITOIRE près de son parent — c'est le seul moyen pour un aperçu
+        // d'atterrir sur le même écran que son panneau. Sans ça, sur un poste
+        // à deux écrans, les panneaux se déplacent à la main mais pas les
+        // aperçus : ils portent WindowTransparentForInput, la souris les
+        // traverse et on ne peut pas les attraper (issue #1).
+        transientParent: opp
         visible: opp.visible && opp.hoverCard !== ""
         title: "Cairn · aperçu adversaire"
         cardId: opp.hoverCard

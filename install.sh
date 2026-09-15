@@ -122,11 +122,11 @@ if [[ "${XDG_CURRENT_DESKTOP:-}" == *KDE* ]] && command -v kwriteconfig6 >/dev/n
     # --reset-pos, et une installation ne garde pas l'arborescence du dépôt
     install -Dm755 "$ROOT/tools/install_kwin_rule.sh" "$PREFIX/cairn/install_kwin_rule.sh"
 
-    # Script KWin : ouvre les overlays sur le bureau virtuel de Hearthstone.
-    # Une règle KWin ne sait pas dire « le même bureau qu'une autre fenêtre »,
-    # d'où un script. Sans lui, une partie qui démarre pendant qu'on est sur un
-    # autre bureau fait apparaître les fenêtres sous les yeux, au mauvais
-    # endroit, et il faut les traîner à la main.
+    # Script KWin : ouvre les overlays sur le bureau virtuel ET l'écran de
+    # Hearthstone, et colle chaque aperçu à son panneau. Une règle KWin ne sait
+    # pas dire « le même bureau / le même écran qu'une autre fenêtre », d'où un
+    # script. Sans lui, les fenêtres apparaissent au mauvais endroit — sur un
+    # autre bureau, ou sur l'autre écran d'un poste qui en a deux (issue #1).
     KS="$HOME/.local/share/kwin/scripts/cairn-follow"
     if [ -d "$ROOT/tools/kwin-script" ]; then
         mkdir -p "$KS" && cp -r "$ROOT/tools/kwin-script/." "$KS"/
@@ -134,7 +134,12 @@ if [[ "${XDG_CURRENT_DESKTOP:-}" == *KDE* ]] && command -v kwriteconfig6 >/dev/n
         qdbus6 org.kde.KWin /KWin org.kde.KWin.reconfigure >/dev/null 2>&1 \
             || gdbus call --session --dest org.kde.KWin --object-path /KWin \
                  --method org.kde.KWin.reconfigure >/dev/null 2>&1 || true
-        say "Overlays épinglés au bureau de Hearthstone."
+        # « reconfigure » ne relit pas un script DÉJÀ chargé : sans ce
+        # déchargement, une mise à jour garderait l'ancienne version jusqu'à la
+        # prochaine session. « start » recharge les scripts activés.
+        qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript cairn-follow >/dev/null 2>&1 || true
+        qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.start >/dev/null 2>&1 || true
+        say "Overlays épinglés au bureau et à l'écran de Hearthstone."
     fi
 else
     warn "Bureau non-KDE (${XDG_CURRENT_DESKTOP:-inconnu}) : configure toi-même « toujours au-dessus »"
