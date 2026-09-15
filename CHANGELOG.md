@@ -4,6 +4,54 @@ Les versions suivent [SemVer](https://semver.org/lang/fr/). Ce fichier dit ce qu
 change **pour qui utilise Cairn** ; le détail des décisions est dans
 [`docs/CAHIER_DES_CHARGES.md`](docs/CAHIER_DES_CHARGES.md).
 
+## [1.0.3] — 2026-09-15
+
+### Double écran (issue #1)
+
+- Les panneaux et widgets s'ouvrent désormais **sur l'écran de Hearthstone**, à la même
+  place relative, et le suivent s'il change d'écran. Sous Wayland, une application ne
+  choisit pas son écran : c'est le script KWin `cairn-follow` qui s'en charge.
+- Les **aperçus de cartes** se collent à leur panneau réel, du côté prévu (de l'autre
+  s'il n'y a pas la place), au lieu d'une position fixe. Ça sert aussi avec un seul
+  écran : un aperçu suit maintenant un panneau qu'on a déplacé.
+- Pour garder ses panneaux sur un autre écran que le jeu :
+  `kwriteconfig6 --file kwinrc --group Script-cairn-follow --key suivreEcranDeHearthstone false`.
+- `install.sh` recharge le script KWin : une mise à jour prend effet sans fermer la session.
+
+### Suivi de partie
+
+- **Reconnexion** : après une déconnexion, Hearthstone réécrit toute la partie comme si
+  elle commençait. Cairn la reconnaît (même graine de partie) et reprend là où il en
+  était, au lieu de repartir d'un deck intact au milieu de la partie.
+- Une partie coupée par une déconnexion ne laisse plus ses panneaux flotter sur le menu.
+- **Choix manuel du deck** d'un clic sur le titre du panneau, quand la déduction ne
+  tranche pas.
+- Panneau du deck : section « mes cartes jouées », et « Ma main » masquable à part.
+
+### Statistiques
+
+- Forme des victoires et des défaites par deck (manches et durée moyennes), dans
+  l'infobulle.
+- Les parties d'une session qui franchit minuit sont datées du bon jour.
+
+### Divers
+
+- Pseudonymisation des parties partagées par blocs : l'interface ne gèle plus
+  (1150 ms → 21 ms).
+- Lancer Cairn une seconde fois ne réveille plus que le launcher.
+- Le numéro de version envoyé avec les parties partagées était resté à `0.0.1` : il suit
+  désormais celui du paquet.
+
+## [1.0.2] — 2026-09-01
+
+- Règles KWin : chemins système, pour une installation par paquet ; premier PKGBUILD.
+
+## [1.0.1] — 2026-09-01
+
+- Les parties sans deck sont traversées sans être analysées : démarrage environ 10 fois
+  plus fluide.
+- README : capture en jeu en tête.
+
 ## [1.0.0] — 2026-08-30
 
 Première version publique. Un tracker Hearthstone **natif Linux** : il lit les journaux

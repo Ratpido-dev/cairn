@@ -167,3 +167,25 @@ def test_installateur_pose_une_icone_resoluble():
     sh = (ROOT / "install.sh").read_text(encoding="utf-8")
     assert "index.theme" in sh
     assert "Icon=$ICONS/cairn.svg" in sh, "le raccourci doit pointer un chemin absolu"
+
+
+def test_version_du_code_egale_celle_du_paquet():
+    """X-Cairn-Version part avec chaque partie partagée : elle doit dire vrai.
+
+    Elle est restée à 0.0.1 jusqu'à la 1.0.2 incluse, faute de ce test.
+    """
+    import tomllib
+
+    projet = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    from src.cairn import __version__
+
+    assert __version__ == projet["project"]["version"]
+
+
+def test_installateur_recharge_le_script_kwin():
+    """« reconfigure » ne relit pas un script KWin déjà chargé : sans le
+    décharger, une mise à jour garderait l'ancien placement des fenêtres
+    jusqu'à la session suivante (issue #1)."""
+    sh = (ROOT / "install.sh").read_text(encoding="utf-8")
+    assert "unloadScript cairn-follow" in sh
+    assert "Scripting.start" in sh
