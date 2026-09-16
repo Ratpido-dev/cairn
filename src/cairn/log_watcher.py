@@ -123,12 +123,13 @@ class LiveTracker:
         from_start: bool = True,
         mirror_dir: Path | None = None,
         prefix_override: str | None = None,
+        logs_override: str | None = None,
         archive=None,
     ):
         # None = on résout à la construction : le prefix peut avoir été changé
         # dans la configuration depuis l'import du module
         if logs_root is None:
-            logs_root = resolve_logs_root(prefix_override)
+            logs_root = resolve_logs_root(prefix_override, logs_override)
         self.logs_root = Path(logs_root) if logs_root is not None else None
         self.mirror_dir = mirror_dir
         # Archiveur de sessions (cf. archive.SessionArchive), ou None. Branché

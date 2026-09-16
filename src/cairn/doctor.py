@@ -15,15 +15,16 @@ import sys
 from pathlib import Path
 
 from .hs_setup import (
+    LOGS_ENV,
     PREFIX_ENV,
     client_config_ok,
     client_config_path,
     ensure_client_config,
+    detect_logs_root,
     detect_prefix,
     ensure_log_config,
     find_prefixes,
     log_config_status,
-    logs_root,
 )
 from .paths import CARDS_JSON, CARDS_JSON_EN
 
@@ -43,24 +44,32 @@ def main(argv: list[str] | None = None) -> int:
     env = os.environ.get(PREFIX_ENV)
     if env:
         line(OK if Path(env).is_dir() else BAD, f"${PREFIX_ENV}", env)
+    env_logs = os.environ.get(LOGS_ENV)
+    if env_logs:
+        line(OK if Path(env_logs).is_dir() else BAD, f"${LOGS_ENV}", env_logs)
 
     found = find_prefixes()
     prefix = detect_prefix()
-    if prefix is None:
-        line(BAD, "prefix Hearthstone", "INTROUVABLE")
+    root = detect_logs_root()
+    if prefix is None and root is None:
+        line(BAD, "installation Hearthstone", "INTROUVABLE")
         print(
             "\n   Aucune installation détectée. Indique-la à la main :\n"
             f"     export {PREFIX_ENV}=/chemin/vers/le/prefix\n"
             "   (le prefix est le dossier qui CONTIENT « drive_c »)\n"
+            "\n   Installation sans Wine (portage natif) ? vise ses journaux :\n"
+            f"     export {LOGS_ENV}=/chemin/vers/Logs\n"
         )
         return 1
 
-    line(OK, "prefix Hearthstone", str(prefix))
-    for other in found[1:]:
-        line(WARN, "autre installation", f"{other} (ignorée)")
+    if prefix is not None:
+        line(OK, "prefix Hearthstone", str(prefix))
+        for other in found[1:]:
+            line(WARN, "autre installation", f"{other} (ignorée)")
+    else:
+        line(WARN, "prefix Hearthstone", "aucun — journaux visés directement")
 
-    root = logs_root(prefix)
-    sessions = sorted(root.glob("Hearthstone_*")) if root.is_dir() else []
+    sessions = sorted(root.glob("Hearthstone_*")) if root is not None and root.is_dir() else []
     line(
         OK if sessions else WARN,
         "sessions de journaux",
@@ -68,30 +77,39 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     # ---- journaux du jeu ----------------------------------------------------
-    status = log_config_status(prefix)
-    if fix and not status.ready:
-        status = ensure_log_config(prefix)
-        print("   → log.config écrit ; REDÉMARRE Hearthstone pour qu'il en tienne compte.")
-    labels = {
-        "ok": (OK, "activés"),
-        "incomplete": (BAD, "incomplets — relance avec --fix"),
-        "missing": (BAD, "absents — relance avec --fix"),
-        "no_prefix": (BAD, "prefix introuvable"),
-    }
-    mark, text = labels[status.state]
-    line(mark, "journaux du jeu", f"{text}  {status.path or ''}")
+    # log.config et client.config vivent DANS le prefix. Sans prefix — quand on
+    # a visé un dossier Logs/ à la main — Cairn ne peut ni les lire ni les
+    # écrire : il se contente de lire ce que le jeu veut bien produire.
+    if prefix is None:
+        line(WARN, "journaux du jeu", "à activer à la main (log.config)")
+        line(WARN, "plafond des journaux", "non géré sans prefix (client.config)")
+        journaux_ok, capped = bool(sessions), False
+    else:
+        status = log_config_status(prefix)
+        if fix and not status.ready:
+            status = ensure_log_config(prefix)
+            print("   → log.config écrit ; REDÉMARRE Hearthstone pour qu'il en tienne compte.")
+        labels = {
+            "ok": (OK, "activés"),
+            "incomplete": (BAD, "incomplets — relance avec --fix"),
+            "missing": (BAD, "absents — relance avec --fix"),
+            "no_prefix": (BAD, "prefix introuvable"),
+        }
+        mark, text = labels[status.state]
+        line(mark, "journaux du jeu", f"{text}  {status.path or ''}")
 
-    # plafond de 10 Mo : sans cette clé, HS cesse d'écrire en pleine session
-    if fix and not client_config_ok(prefix):
-        ensure_client_config(prefix)
-        print("   → client.config écrit ; REDÉMARRE Hearthstone.")
-    capped = not client_config_ok(prefix)
-    line(
-        BAD if capped else OK,
-        "plafond des journaux",
-        ("10 Mo — relance avec --fix (sinon HS coupe le suivi en pleine partie)"
-         if capped else f"levé  {client_config_path(prefix)}"),
-    )
+        # plafond de 10 Mo : sans cette clé, HS cesse d'écrire en pleine session
+        if fix and not client_config_ok(prefix):
+            ensure_client_config(prefix)
+            print("   → client.config écrit ; REDÉMARRE Hearthstone.")
+        capped = not client_config_ok(prefix)
+        line(
+            BAD if capped else OK,
+            "plafond des journaux",
+            ("10 Mo — relance avec --fix (sinon HS coupe le suivi en pleine partie)"
+             if capped else f"levé  {client_config_path(prefix)}"),
+        )
+        journaux_ok = status.ready
 
     # taille du journal courant : la limite Blizzard des 10 Mo coupe le logger
     if sessions:
@@ -184,7 +202,7 @@ def main(argv: list[str] | None = None) -> int:
             "installées" if installed else "manquantes — relance install.sh, ou « Replacer les widgets » dans le launcher",
         )
 
-    ready = status.ready and CARDS_JSON.is_file() and not capped
+    ready = journaux_ok and CARDS_JSON.is_file() and not capped
     print("\n\033[1m" + ("Tout est prêt." if ready else "Configuration incomplète — voir ci-dessus.") + "\033[0m\n")
     return 0 if ready else 1
 

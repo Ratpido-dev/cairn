@@ -8,7 +8,9 @@ import pytest
 
 from src.cairn import hs_setup
 from src.cairn.hs_setup import (
+    LOGS_ENV,
     PREFIX_ENV,
+    detect_logs_root,
     detect_prefix,
     ensure_log_config,
     find_log_config,
@@ -274,3 +276,64 @@ def test_deja_leve_laisse_intact(tmp_path):
     assert ensure_client_config(prefix) is True
     assert path.read_text(encoding="utf-8") == avant
     assert not path.with_suffix(".config.bak").exists()
+
+
+# ---- journaux visés directement (installations sans prefix) ------------------
+#
+# Certains portages font tourner Hearthstone sans Wine : ni « drive_c », ni
+# dossier utilisateur Windows, donc aucune détection de prefix ne peut marcher.
+# Le tracker, lui, n'a jamais eu besoin que d'un dossier de journaux.
+
+def make_logs(root, name="game", sessions=("Hearthstone_2026_09_16_10_00_00",)):
+    """Installation sans prefix : un dossier de jeu et ses Logs, rien d'autre."""
+    logs = root / name / "Logs"
+    logs.mkdir(parents=True)
+    for session in sessions:
+        (logs / session).mkdir()
+    return logs
+
+
+def test_logs_vises_par_variable_d_environnement(tmp_path, monkeypatch):
+    logs = make_logs(tmp_path)
+    monkeypatch.setenv(LOGS_ENV, str(logs))
+    monkeypatch.setattr(hs_setup, "iter_candidate_prefixes", lambda: iter(()))
+    assert detect_logs_root() == logs
+
+
+def test_dossier_du_jeu_accepte_a_la_place_du_dossier_logs(tmp_path, monkeypatch):
+    """Viser « …/game » ou « …/game/Logs » doit revenir au même."""
+    logs = make_logs(tmp_path)
+    monkeypatch.setenv(LOGS_ENV, str(logs.parent))
+    assert detect_logs_root() == logs
+
+
+def test_argument_logs_prioritaire_sur_l_environnement(tmp_path, monkeypatch):
+    a = make_logs(tmp_path, "a")
+    b = make_logs(tmp_path, "b")
+    monkeypatch.setenv(LOGS_ENV, str(a))
+    assert detect_logs_root(logs_override=str(b)) == b
+
+
+def test_logs_prioritaires_sur_un_prefix_detecte(tmp_path, monkeypatch):
+    """Une installation visée à la main l'emporte sur un prefix Wine trouvé."""
+    prefix = make_prefix(tmp_path)
+    logs = make_logs(tmp_path)
+    monkeypatch.setattr(hs_setup, "iter_candidate_prefixes", lambda: iter([prefix]))
+    monkeypatch.setenv(LOGS_ENV, str(logs))
+    assert detect_logs_root() == logs
+
+
+def test_logs_invalides_retombent_sur_le_prefix(tmp_path, monkeypatch):
+    """Un chemin faux ne doit pas casser la détection normale."""
+    prefix = make_prefix(tmp_path)
+    monkeypatch.setenv(LOGS_ENV, str(tmp_path / "nexiste_pas"))
+    monkeypatch.delenv(PREFIX_ENV, raising=False)
+    monkeypatch.setattr(hs_setup, "find_prefixes", lambda: [prefix])
+    assert detect_logs_root() == prefix / hs_setup.HS_SUBPATH / "Logs"
+
+
+def test_ni_logs_ni_prefix_rend_none(tmp_path, monkeypatch):
+    monkeypatch.delenv(LOGS_ENV, raising=False)
+    monkeypatch.delenv(PREFIX_ENV, raising=False)
+    monkeypatch.setattr(hs_setup, "iter_candidate_prefixes", lambda: iter(()))
+    assert detect_logs_root() is None

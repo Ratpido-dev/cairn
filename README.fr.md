@@ -92,6 +92,9 @@ cairn-cards --check     # la base de cartes est-elle à jour ?
 
 Le prefix Wine/Proton est **détecté** (Lutris, Steam/Proton, Heroic, Bottles,
 PlayOnLinux, wine nu). En cas de doute : `export CAIRN_HS_PREFIX=/chemin/vers/le/prefix`.
+Hearthstone tourne sans Wine ? Vise directement les journaux du jeu :
+`export CAIRN_HS_LOGS=/chemin/vers/Logs`. Cairn se contente alors de les lire —
+il ne peut pas écrire le `log.config` du jeu, qui vit dans le prefix.
 
 ## Ce que Cairn montre
 

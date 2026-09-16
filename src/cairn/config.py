@@ -36,6 +36,9 @@ class Config:
     my_plays: bool = True
     language: str = "fr"  # "fr" | "en"
     hs_prefix: str = ""  # force le prefix Wine/Proton si la détection se trompe
+    # Vise directement un dossier Logs/, sans prefix : installations natives
+    # (hearthstone-linux-gui et consorts), où « drive_c » n'existe pas.
+    hs_logs: str = ""
     # Commande de lancement du jeu, saisie par l'utilisateur. C'est le SEUL
     # mécanisme qui marche pour tout le monde : la détection (Lutris, .desktop)
     # n'est qu'un raccourci pour les cas courants, et ne trouvera jamais un
@@ -132,6 +135,7 @@ class Config:
         cfg.my_plays = bool(data.get("my_plays", True))
         cfg.language = "en" if data.get("language") == "en" else "fr"
         cfg.hs_prefix = str(data.get("hs_prefix") or "")
+        cfg.hs_logs = str(data.get("hs_logs") or "")
         cfg.log_rotation = bool(data.get("log_rotation", False))
         cfg.archive_sessions = bool(data.get("archive_sessions", True))
         partage = data.get("share_games")

@@ -30,6 +30,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 PREFIX_ENV = "CAIRN_HS_PREFIX"
+# Vise un dossier « Logs/ » SANS passer par un prefix. Seule porte d'entrée
+# pour les installations qui n'ont ni « drive_c » ni dossier utilisateur
+# Windows — portages natifs, montages exotiques, journaux recopiés à la main.
+LOGS_ENV = "CAIRN_HS_LOGS"
 
 # Chemin du jeu À L'INTÉRIEUR d'un prefix, et sous-chemin du log.config
 HS_SUBPATH = Path("drive_c/Program Files (x86)/Hearthstone")
@@ -190,6 +194,42 @@ def detect_prefix(override: str | Path | None = None) -> Path | None:
 
 def logs_root(prefix: Path) -> Path:
     return prefix / HS_SUBPATH / "Logs"
+
+
+def _as_logs_root(candidate: str | Path) -> Path | None:
+    """Interprète un chemin donné à la main comme dossier ``Logs/``.
+
+    On accepte les deux façons naturelles de le désigner — le dossier ``Logs``
+    lui-même, ou le dossier du jeu qui le contient — parce que personne ne sait
+    de tête laquelle des deux on attend.
+    """
+    path = Path(candidate).expanduser()
+    inner = path / "Logs"
+    if inner.is_dir():
+        return inner
+    if path.is_dir():
+        return path
+    return None
+
+
+def detect_logs_root(
+    logs_override: str | Path | None = None,
+    prefix_override: str | Path | None = None,
+) -> Path | None:
+    """Dossier ``Logs/`` du jeu, SANS supposer une installation Wine.
+
+    Priorité : argument > ``CAIRN_HS_LOGS`` > prefix (argument, ``CAIRN_HS_PREFIX``,
+    détection). Les deux premiers niveaux existent parce que tout le reste du
+    tracker ne demande qu'une chose — des ``Hearthstone_<date>/Power.log`` —
+    alors que la détection de prefix, elle, impose une arborescence Wine.
+    """
+    for candidate in (logs_override, os.environ.get(LOGS_ENV)):
+        if candidate:
+            root = _as_logs_root(candidate)
+            if root is not None:
+                return root
+    prefix = detect_prefix(prefix_override)
+    return logs_root(prefix) if prefix is not None else None
 
 
 def find_log_config(prefix: Path) -> Path | None:

@@ -405,3 +405,27 @@ def test_tailer_signale_le_retard_pendant_le_rattrapage(tmp_path, monkeypatch):
     while tailer.poll():
         pass
     assert tailer.en_retard is False
+
+
+# ---- installation sans prefix ------------------------------------------------
+
+def test_tracker_suit_une_installation_sans_prefix(tmp_path, monkeypatch):
+    """Portage natif : pas de « drive_c », on vise le dossier du jeu.
+
+    Le suiveur n'a jamais eu besoin d'un prefix, seulement d'un dossier de
+    journaux — ce test verrouille le fait qu'aucune détection Wine ne s'y mêle.
+    """
+    from src.cairn import hs_setup
+
+    session = tmp_path / "game" / "Logs" / "Hearthstone_2026_09_16_10_00_00"
+    session.mkdir(parents=True)
+    (session / "Power.log").write_text(f"{L}TAG_CHANGE Entity=moi tag=MULLIGAN_STATE\n")
+
+    monkeypatch.delenv(hs_setup.PREFIX_ENV, raising=False)
+    monkeypatch.delenv(hs_setup.LOGS_ENV, raising=False)
+    monkeypatch.setattr(hs_setup, "iter_candidate_prefixes", lambda: iter(()))
+
+    tracker = LiveTracker(logs_override=str(session.parent.parent))
+    assert tracker.logs_root == session.parent
+    update = tracker.poll()
+    assert update.session_switched == session

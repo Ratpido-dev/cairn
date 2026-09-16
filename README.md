@@ -92,6 +92,9 @@ cairn-cards --check     # is the card database up to date?
 
 The Wine/Proton prefix is **detected** (Lutris, Steam/Proton, Heroic, Bottles,
 PlayOnLinux, plain wine). If in doubt: `export CAIRN_HS_PREFIX=/path/to/the/prefix`.
+Running Hearthstone without Wine? Point Cairn straight at the game's logs
+instead: `export CAIRN_HS_LOGS=/path/to/Logs`. Cairn then only reads them — it
+cannot write Hearthstone's `log.config` for you, since that lives in the prefix.
 
 ## What Cairn shows
 

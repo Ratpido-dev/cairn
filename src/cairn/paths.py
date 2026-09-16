@@ -12,7 +12,7 @@ import gzip
 import os
 from pathlib import Path
 
-from .hs_setup import HS_SUBPATH, detect_prefix, logs_root
+from .hs_setup import HS_SUBPATH, detect_logs_root, detect_prefix
 
 # ---- données de Cairn -------------------------------------------------------
 
@@ -95,15 +95,22 @@ def resolve_prefix(override: str | Path | None = None) -> Path | None:
     return detect_prefix(override)
 
 
-def resolve_logs_root(override: str | Path | None = None) -> Path | None:
-    """Dossier ``Logs/`` du jeu, ``None`` si le prefix est introuvable."""
-    prefix = resolve_prefix(override)
-    return logs_root(prefix) if prefix is not None else None
+def resolve_logs_root(
+    override: str | Path | None = None,
+    logs_override: str | Path | None = None,
+) -> Path | None:
+    """Dossier ``Logs/`` du jeu, ``None`` s'il reste introuvable.
+
+    ``logs_override`` (ou ``CAIRN_HS_LOGS``) court-circuite toute la détection
+    de prefix : c'est ce qui permet de suivre une installation sans ``drive_c``.
+    """
+    return detect_logs_root(logs_override, override)
 
 
 PREFIX = resolve_prefix()
 HS_DIR = (PREFIX / HS_SUBPATH) if PREFIX else None
-HS_LOGS_ROOT = logs_root(PREFIX) if PREFIX else None
+# Pas dérivé de PREFIX : les journaux peuvent être visés seuls, sans prefix.
+HS_LOGS_ROOT = detect_logs_root()
 
 
 def latest_session_dir(root: Path | None = None) -> Path | None:

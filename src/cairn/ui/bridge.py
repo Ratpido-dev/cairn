@@ -342,6 +342,7 @@ class TrackerBridge(QObject):
             from_start=True,
             mirror_dir=self._mirror,
             prefix_override=self._config.hs_prefix or None,
+            logs_override=self._config.hs_logs or None,
             archive=self._archive,
         )
         tracker.rotation_broken = not self._config.log_rotation
