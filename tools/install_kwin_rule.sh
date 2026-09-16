@@ -130,7 +130,23 @@ add_pos_rule "cairn-pos-ap-secret"  "Cairn · aperçu secret"      "$((RES_W/2 +
 n=$(awk -F, '{print NF}' <<<"$rules")
 kwriteconfig6 --file kwinrulesrc --group General --key count "$n"
 
-qdbus6 org.kde.KWin /KWin org.kde.KWin.reconfigure 2>/dev/null \
-    || echo "(KWin sera rechargé à la prochaine session)"
+# Le client qdbus change de nom selon la distribution (« qdbus6 » sur Arch,
+# « qdbus-qt6 » sur Fedora) et n'est pas toujours installé. « gdbus », lui,
+# vient de glib2 et accompagne toujours KDE. Sans ce repli, le bouton
+# « Replacer les widgets » du launcher ne rechargeait rien sur Fedora, sans
+# le moindre message (issue #1).
+recharge=0
+for bin in qdbus6 qdbus-qt6 qdbus; do
+    command -v "$bin" >/dev/null 2>&1 || continue
+    if "$bin" org.kde.KWin /KWin org.kde.KWin.reconfigure >/dev/null 2>&1; then
+        recharge=1
+        break
+    fi
+done
+if [ "$recharge" -eq 0 ]; then
+    gdbus call --session --dest org.kde.KWin --object-path /KWin \
+          --method org.kde.KWin.reconfigure >/dev/null 2>&1 \
+        || echo "(KWin sera rechargé à la prochaine session)"
+fi
 echo "Règles KWin installées : Cairn au-dessus + overlay plein écran + HS sans bordure ${RES_W}×${RES_H}."
 echo "→ Hearthstone peut rester en PLEIN ÉCRAN : les fenêtres Cairn passent en couche overlay."

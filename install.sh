@@ -20,6 +20,32 @@ say()  { printf '\033[1m›\033[0m %s\n' "$*"; }
 warn() { printf '\033[33m!\033[0m %s\n' "$*"; }
 die()  { printf '\033[31m✗\033[0m %s\n' "$*" >&2; exit 1; }
 
+# Le client qdbus ne porte pas le même nom partout : « qdbus6 » sur Arch,
+# « qdbus-qt6 » sur Fedora, « qdbus » ailleurs. Un appel qui n'en connaît
+# qu'un seul échoue en SILENCE — et l'installation annonce alors une réussite
+# alors que KWin n'a rien rechargé (signalé sur Fedora, issue #1). « gdbus »
+# vient de glib2 et est présent partout où tourne KDE : c'est le vrai repli.
+# Rend 1 si AUCUN client n'a abouti, pour qu'on puisse le dire à l'utilisateur.
+kwin_dbus() {   # chemin d'objet, méthode, argument éventuel
+    local obj="$1" methode="$2" arg="${3:-}" bin
+    for bin in qdbus6 qdbus-qt6 qdbus; do
+        command -v "$bin" >/dev/null 2>&1 || continue
+        if [ -n "$arg" ]; then
+            "$bin" org.kde.KWin "$obj" "$methode" "$arg" >/dev/null 2>&1 && return 0
+        else
+            "$bin" org.kde.KWin "$obj" "$methode" >/dev/null 2>&1 && return 0
+        fi
+    done
+    if [ -n "$arg" ]; then
+        gdbus call --session --dest org.kde.KWin --object-path "$obj" \
+              --method "$methode" "$arg" >/dev/null 2>&1 && return 0
+    else
+        gdbus call --session --dest org.kde.KWin --object-path "$obj" \
+              --method "$methode" >/dev/null 2>&1 && return 0
+    fi
+    return 1
+}
+
 # ---- désinstallation --------------------------------------------------------
 if [[ "${1:-}" == "--uninstall" ]]; then
     rm -rf "$PREFIX/cairn/venv" "$APPS/cairn.desktop" "$ICONS/cairn.svg"
@@ -131,15 +157,20 @@ if [[ "${XDG_CURRENT_DESKTOP:-}" == *KDE* ]] && command -v kwriteconfig6 >/dev/n
     if [ -d "$ROOT/tools/kwin-script" ]; then
         mkdir -p "$KS" && cp -r "$ROOT/tools/kwin-script/." "$KS"/
         kwriteconfig6 --file kwinrc --group Plugins --key cairn-followEnabled true
-        qdbus6 org.kde.KWin /KWin org.kde.KWin.reconfigure >/dev/null 2>&1 \
-            || gdbus call --session --dest org.kde.KWin --object-path /KWin \
-                 --method org.kde.KWin.reconfigure >/dev/null 2>&1 || true
+        kwin_dbus /KWin org.kde.KWin.reconfigure || true
         # « reconfigure » ne relit pas un script DÉJÀ chargé : sans ce
         # déchargement, une mise à jour garderait l'ancienne version jusqu'à la
         # prochaine session. « start » recharge les scripts activés.
-        qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript cairn-follow >/dev/null 2>&1 || true
-        qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.start >/dev/null 2>&1 || true
-        say "Overlays épinglés au bureau et à l'écran de Hearthstone."
+        kwin_dbus /Scripting org.kde.kwin.Scripting.unloadScript cairn-follow || true
+        if kwin_dbus /Scripting org.kde.kwin.Scripting.start; then
+            say "Overlays épinglés au bureau et à l'écran de Hearthstone."
+        else
+            # Ne PAS annoncer une réussite ici : les fichiers sont en place mais
+            # KWin exécute encore l'ancien script, et l'utilisateur chercherait
+            # le bug dans Cairn au lieu de fermer sa session.
+            warn "KWin n'a pas pu être rechargé : ferme ta session et rouvre-la"
+            warn "pour activer le suivi d'écran (les fichiers sont déjà installés)."
+        fi
     fi
 else
     warn "Bureau non-KDE (${XDG_CURRENT_DESKTOP:-inconnu}) : configure toi-même « toujours au-dessus »"

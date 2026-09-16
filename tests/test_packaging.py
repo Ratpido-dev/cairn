@@ -193,3 +193,23 @@ def test_installateur_recharge_le_script_kwin():
     sh = (ROOT / "install.sh").read_text(encoding="utf-8")
     assert "unloadScript cairn-follow" in sh
     assert "Scripting.start" in sh
+
+
+def test_appels_dbus_portables():
+    """Le client qdbus ne porte pas le même nom selon la distribution :
+    « qdbus6 » sur Arch, « qdbus-qt6 » sur Fedora, absent ailleurs. Un appel
+    qui n'en connaît qu'un seul échoue SANS RIEN DIRE — c'est ce qui a fait
+    croire à un utilisateur Fedora que le correctif multi-écran ne marchait
+    pas : KWin gardait l'ancien script, et l'installateur annonçait quand même
+    sa réussite. Tout appel doit donc essayer les autres noms, puis « gdbus »,
+    fourni par glib2 et présent partout où tourne KDE."""
+    for nom in ("install.sh", "tools/install_kwin_rule.sh"):
+        sh = (ROOT / nom).read_text(encoding="utf-8")
+        assert "qdbus-qt6" in sh, f"{nom} ignore le nom Fedora du client qdbus"
+        assert "gdbus" in sh, f"{nom} n'a aucun repli gdbus"
+        directs = [
+            ligne.strip()
+            for ligne in sh.splitlines()
+            if ligne.strip().startswith("qdbus")
+        ]
+        assert not directs, f"{nom} appelle qdbus en dur : {directs}"
