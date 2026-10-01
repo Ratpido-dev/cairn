@@ -40,6 +40,11 @@ STANDARD_SETS = frozenset(
     }
 )
 
+# Cartes du format Classique (le jeu de base figé de 2014) : légales
+# uniquement en FT_CLASSIC, jamais en Wild. Sans ce filtre, le Wild affichait
+# Barrière de glace trois fois (EX1_289, CORE_EX1_289, VAN_EX1_289) — #3.
+_CLASSIC_SET = "VANILLA"
+
 # La zone SECRET accueille aussi les quêtes et les sigils : on ne compte que
 # les cartes réellement marquées « Secret ».
 _SECRET_ZONE = "SECRET"
@@ -122,9 +127,19 @@ def secret_classes_in_play(
     return sorted(set(classes))
 
 
-def _revealed(game: Game, db: CardsDb, player_id: int) -> dict[str, int]:
-    """Secrets déjà dévoilés (déclenchés ou détruits) et leur nombre."""
-    seen: dict[str, int] = {}
+def _secret_key(db: CardsDb, card_id: str) -> tuple[str, str]:
+    """Identité d'un secret au-delà de ses réimpressions.
+
+    EX1_289 et CORE_EX1_289 sont la même carte pour le joueur : la limite de
+    deux exemplaires porte sur la carte, pas sur l'id.
+    """
+    card = db.by_card_id.get(card_id) or {}
+    return card.get("cardClass", ""), card.get("name") or card_id
+
+
+def _revealed(game: Game, db: CardsDb, player_id: int) -> dict[tuple[str, str], int]:
+    """Secrets déjà dévoilés (déclenchés ou détruits), comptés par carte."""
+    seen: dict[tuple[str, str], int] = {}
     for e in game.entities.values():
         if (
             e.controller == player_id
@@ -132,7 +147,8 @@ def _revealed(game: Game, db: CardsDb, player_id: int) -> dict[str, int]:
             and db.is_secret(e.card_id)
             and e.zone in ("GRAVEYARD", "REMOVEDFROMGAME")
         ):
-            seen[e.card_id] = seen.get(e.card_id, 0) + 1
+            key = _secret_key(db, e.card_id)
+            seen[key] = seen.get(key, 0) + 1
     return seen
 
 
@@ -198,16 +214,21 @@ def candidates(
     if player_id is None or secrets_in_play(game, db, player_id) == 0:
         return []
 
-    standard = game.format_type == "FT_STANDARD"
+    format_type = game.format_type
     already = _revealed(game, db, player_id)
     posees = secret_classes_in_play(game, db, player_id)
     if not posees:
         posees = [klass] if klass else []
 
     def legal(card: dict | None) -> bool:
-        return card is not None and (
-            not standard or card.get("set") in STANDARD_SETS
-        )
+        if card is None:
+            return False
+        card_set = card.get("set")
+        if format_type == "FT_STANDARD":
+            return card_set in STANDARD_SETS
+        if format_type == "FT_CLASSIC":
+            return card_set == _CLASSIC_SET
+        return card_set != _CLASSIC_SET
 
     # Trois cas, du plus précis au plus large :
     #   — la classe a des secrets légaux dans le format (Chasseur, Mage en août
@@ -234,8 +255,10 @@ def candidates(
     retenues = avec_secrets
     toutes_classes = not retenues
     declencheurs = _observed_triggers(game, db, player_id)
-    out = []
-    for card_id in db.secret_ids:
+    # Une ligne par carte, quel que soit le nombre de réimpressions (#3). On
+    # regroupe d'abord les ids légaux par carte, puis on en retient un.
+    groupes: dict[tuple[str, str], list[str]] = {}
+    for card_id in sorted(db.secret_ids):
         card = db.by_card_id.get(card_id)
         if card is None:
             continue
@@ -244,15 +267,29 @@ def candidates(
             continue
         if (toutes_classes or klass_carte in strictes) and not legal(card):
             continue
-        if already.get(card_id, 0) >= 2:  # les deux exemplaires sont partis
+        key = _secret_key(db, card_id)
+        if already.get(key, 0) >= 2:  # les deux exemplaires sont partis
             continue
+        groupes.setdefault(key, []).append(card_id)
+
+    out = []
+    for ids in groupes.values():
+        # L'id retenu doit être stable d'un rafraîchissement à l'autre : c'est
+        # lui que l'utilisateur barre d'un clic. Version Standard d'abord
+        # (CORE…), puis le plus petit id.
+        card_id = next(
+            (c for c in ids if db.by_card_id[c].get("set") in STANDARD_SETS),
+            ids[0],
+        )
+        card = db.by_card_id[card_id]
+        # le déclencheur est connu pour UNE version : il vaut pour toutes
+        trigger = next((_TRIGGERS[c] for c in ids if c in _TRIGGERS), None)
         out.append(
             SecretCandidate(
                 name=card.get("name", card_id),
                 cost=card.get("cost", 0) or 0,
                 card_id=card_id,
-                ruled_out=_TRIGGERS.get(card_id, "") in declencheurs
-                and card_id in _TRIGGERS,
+                ruled_out=trigger is not None and trigger in declencheurs,
                 card_class=card.get("cardClass", ""),
             )
         )

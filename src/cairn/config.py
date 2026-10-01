@@ -34,11 +34,18 @@ class Config:
     # sorti, non — d'où deux réglages séparés plutôt qu'un choix imposé.
     my_hand: bool = True
     my_plays: bool = True
+    # Carte dont le dernier exemplaire a quitté le deck : grisée et barrée
+    # (False — la liste du deck reste complète) ou retirée de la liste (#4).
+    hide_drawn: bool = False
     language: str = "fr"  # "fr" | "en"
     hs_prefix: str = ""  # force le prefix Wine/Proton si la détection se trompe
     # Vise directement un dossier Logs/, sans prefix : installations natives
     # (hearthstone-linux-gui et consorts), où « drive_c » n'existe pas.
     hs_logs: str = ""
+    # Vérifier que Hearthstone tourne (pgrep Hearthstone.exe) avant d'afficher
+    # les overlays. Les ports natifs (hearthstone-linux-gui) n'ont pas de .exe :
+    # False = on considère le jeu lancé, les journaux suffisent (#2).
+    hs_process_check: bool = True
     # Commande de lancement du jeu, saisie par l'utilisateur. C'est le SEUL
     # mécanisme qui marche pour tout le monde : la détection (Lutris, .desktop)
     # n'est qu'un raccourci pour les cas courants, et ne trouvera jamais un
@@ -133,9 +140,11 @@ class Config:
         cfg.hand_dots = bool(data.get("hand_dots", True))
         cfg.my_hand = bool(data.get("my_hand", True))
         cfg.my_plays = bool(data.get("my_plays", True))
+        cfg.hide_drawn = bool(data.get("hide_drawn", False))
         cfg.language = "en" if data.get("language") == "en" else "fr"
         cfg.hs_prefix = str(data.get("hs_prefix") or "")
         cfg.hs_logs = str(data.get("hs_logs") or "")
+        cfg.hs_process_check = bool(data.get("hs_process_check", True))
         cfg.log_rotation = bool(data.get("log_rotation", False))
         cfg.archive_sessions = bool(data.get("archive_sessions", True))
         partage = data.get("share_games")

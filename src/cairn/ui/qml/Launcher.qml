@@ -29,6 +29,7 @@ Window {
         "tagline":   ["tracker Hearthstone natif Linux", "native Linux Hearthstone tracker"],
         "hsOn":      ["● Hearthstone détecté", "● HS running"],
         "hsOff":     ["○ en attente de HS", "○ HS not running"],
+        "hsForced":  ["● détection du jeu désactivée", "● game detection off"],
         "addons":    ["ADD-ONS DU BANDEAU", "COUNTER BAR ADD-ONS"],
         "windows":   ["FENÊTRES", "WINDOWS"],
         "sharing":   ["PARTAGE DE PARTIES", "GAME SHARING"],
@@ -61,6 +62,11 @@ Window {
         "handDots":  ["Pastilles sous la main adverse", "Dots under opponent's hand"],
         "myHand":    ["Ma main dans le panneau", "My hand in the panel"],
         "myPlays":   ["Mes cartes jouées dans le panneau", "Cards I played, in the panel"],
+        "procCheck": ["Vérifier que Hearthstone est lancé", "Check that Hearthstone is running"],
+        "procCheckHint": ["À couper pour les versions natives (hearthstone-linux-gui) : sans Hearthstone.exe, le jeu n'est jamais détecté.",
+                          "Turn off for native ports (hearthstone-linux-gui): without Hearthstone.exe, the game is never detected."],
+        "hideDrawn": ["Masquer les cartes piochées (sinon grisées)",
+                      "Hide drawn cards (otherwise dimmed)"],
         "handDotsHint": ["Tour d'arrivée, cadeau, vignette. À caler une fois sous son éventail : la position est retenue.",
                          "Arrival turn, gift, tile. Drag it once under their hand: the position is remembered."],
         "sizeDeck":  ["Taille — mon deck", "Size — my deck"],
@@ -92,8 +98,8 @@ Window {
         "warnTitle": ["Attention — action irréversible", "Warning — this cannot be undone"],
         "no":        ["Non, annuler", "No, cancel"],
         "yes":       ["Oui, supprimer", "Yes, delete"],
-        "noPrefix":  ["⚠ Hearthstone est introuvable. Indique le dossier qui contient « drive_c » (variable CAIRN_HS_PREFIX) puis relance Cairn — ou lance « python tools/doctor.py » pour un diagnostic.",
-                      "⚠ Hearthstone not found. Point Cairn at the folder containing “drive_c” (CAIRN_HS_PREFIX) and restart — or run “python tools/doctor.py” to diagnose."],
+        "noPrefix":  ["⚠ Hearthstone est introuvable. Indique le dossier qui contient « drive_c » (variable CAIRN_HS_PREFIX), ou directement son dossier Logs pour une version native (CAIRN_HS_LOGS), puis relance Cairn — ou lance « python tools/doctor.py » pour un diagnostic.",
+                      "⚠ Hearthstone not found. Point Cairn at the folder containing “drive_c” (CAIRN_HS_PREFIX), or straight at its Logs folder for a native port (CAIRN_HS_LOGS), and restart — or run “python tools/doctor.py” to diagnose."],
         "logsOff":   ["⚠ Hearthstone n'écrit pas ses journaux : Cairn ne peut rien suivre. Un clic active l'enregistrement, puis REDÉMARRE le jeu.",
                       "⚠ Hearthstone isn't writing its logs, so Cairn can't track anything. One click enables them, then RESTART the game."],
         "logCapped": ["⚠ Hearthstone plafonne ses journaux à 10 Mo : il cesse d'écrire en pleine session et Cairn devient aveugle. Un clic lève le plafond, puis REDÉMARRE le jeu.",
@@ -478,7 +484,8 @@ Window {
                             anchors.verticalCenter: parent.verticalCenter
                             // le point décoratif du libellé ferait doublon avec
                             // la pastille : on ne garde que les mots
-                            text: home.tr(tracker.hsRunning ? "hsOn" : "hsOff")
+                            text: home.tr(!tracker.processCheck ? "hsForced"
+                                          : tracker.hsRunning ? "hsOn" : "hsOff")
                                       .replace(/^[●○]\s*/, "")
                             color: tracker.hsRunning ? home.thm.goodHi
                                                      : home.thm.textDim
@@ -898,6 +905,20 @@ Window {
 
                     RowLayout {
                         Layout.fillWidth: true
+                        Text {
+                            text: home.tr("hideDrawn")
+                            color: home.thm.text
+                            font.pixelSize: 12
+                            Layout.fillWidth: true
+                        }
+                        NeonSwitch {
+                            checked: tracker.hideDrawn
+                            onToggled: tracker.setHideDrawn(checked)
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
                         ColumnLayout {
                             spacing: 1
                             Layout.fillWidth: true
@@ -917,6 +938,30 @@ Window {
                         NeonSwitch {
                             checked: tracker.handDotsEnabled
                             onToggled: tracker.setHandDotsEnabled(checked)
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        ColumnLayout {
+                            spacing: 1
+                            Layout.fillWidth: true
+                            Text {
+                                text: home.tr("procCheck")
+                                color: home.thm.text
+                                font.pixelSize: 12
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: home.tr("procCheckHint")
+                                color: home.thm.textDim
+                                font.pixelSize: 10
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+                        NeonSwitch {
+                            checked: tracker.processCheck
+                            onToggled: tracker.setProcessCheck(checked)
                         }
                     }
 

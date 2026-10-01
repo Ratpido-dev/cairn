@@ -157,3 +157,67 @@ def test_les_ecartes_descendent_en_bas_de_liste(db):
     liste = candidates(_partie(mes_coups=[(4, "CORE_EX1_622")]), db, 2, "MAGE")
     ecartes = [c.ruled_out for c in liste]
     assert ecartes == sorted(ecartes)  # False avant True
+
+
+# ---- réimpressions et formats (#3) ------------------------------------------
+# En Wild, chaque version d'un secret (EX1_289, CORE_EX1_289, VAN_EX1_289…)
+# sortait sur sa propre ligne : Barrière de glace apparaissait trois fois.
+
+def _wild(db, nb_secrets=1, mes_coups=(), revealed=(), fmt="FT_WILD"):
+    g = _partie(nb_secrets=nb_secrets, mes_coups=mes_coups)
+    g.format_type = fmt
+    for i, cid in enumerate(revealed):
+        g.entities[400 + i] = Entity(entity_id=400 + i, card_id=cid,
+                                     tags={"CONTROLLER": "2", "ZONE": "GRAVEYARD"})
+    return g
+
+
+def _noms(db, game, klass="MAGE"):
+    return [c.name for c in candidates(game, db, 2, klass)]
+
+
+@pytest.mark.parametrize("fmt", ["FT_WILD", "FT_STANDARD", "FT_CLASSIC", "FT_TWIST", None])
+@pytest.mark.parametrize("klass", ["MAGE", "HUNTER", "PALADIN", "ROGUE"])
+def test_aucun_secret_en_double(db, fmt, klass):
+    cs = candidates(_wild(db, fmt=fmt), db, 2, klass)
+    noms = [(c.card_class, c.name) for c in cs]
+    assert len(noms) == len(set(noms))
+
+
+def test_wild_une_seule_barriere_de_glace(db):
+    noms = _noms(db, _wild(db))
+    assert noms.count(db.by_card_id["EX1_289"]["name"]) == 1
+    assert noms.count(db.by_card_id["EX1_287"]["name"]) == 1  # Contresort
+
+
+def test_wild_exclut_le_format_classique(db):
+    for c in candidates(_wild(db), db, 2, "MAGE"):
+        assert db.by_card_id[c.card_id].get("set") != "VANILLA"
+
+
+def test_classique_ne_garde_que_vanilla(db):
+    cs = candidates(_wild(db, fmt="FT_CLASSIC"), db, 2, "MAGE")
+    assert cs
+    for c in cs:
+        assert db.by_card_id[c.card_id].get("set") == "VANILLA"
+
+
+def test_wild_retient_la_version_core(db):
+    ids = {c.card_id for c in candidates(_wild(db), db, 2, "MAGE")}
+    assert "CORE_EX1_289" in ids and "EX1_289" not in ids
+
+
+def test_reimpressions_epuisees_ensemble(db):
+    # deux exemplaires partis sous deux ids différents : la carte est épuisée
+    game = _wild(db, revealed=("EX1_289", "CORE_EX1_289"))
+    assert db.by_card_id["EX1_289"]["name"] not in _noms(db, game)
+
+
+def test_un_seul_exemplaire_parti_reste_candidat(db):
+    game = _wild(db, revealed=("EX1_289",))
+    assert db.by_card_id["EX1_289"]["name"] in _noms(db, game)
+
+
+def test_la_deduction_marche_aussi_en_wild(db):
+    game = _wild(db, mes_coups=[(4, "CORE_CS2_029")])
+    assert _etat(db, game)[CONTRESORT] is True

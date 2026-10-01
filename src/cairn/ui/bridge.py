@@ -197,7 +197,7 @@ class TrackerBridge(QObject):
         self._recorded: set[int] = set()  # index de parties déjà en historique
         self._opp_class: str | None = None
         self._assume_running = assume_running
-        self._hs_running = assume_running
+        self._hs_running = assume_running or not self._config.hs_process_check
         self._hs_check_countdown = 0
         self._session_game_base = 0
         self._log_full_seen = False
@@ -508,7 +508,7 @@ class TrackerBridge(QObject):
 
     def refresh(self) -> None:
         # HS tourne-t-il ? (toutes les ~3 s — pgrep est peu coûteux mais pas gratuit)
-        if not self._assume_running:
+        if not self._assume_running and self._config.hs_process_check:
             self._hs_check_countdown -= 1
             if self._hs_check_countdown <= 0:
                 self._hs_check_countdown = 6
@@ -647,21 +647,7 @@ class TrackerBridge(QObject):
             if c.group == "attack" and c.kind in self._attack:
                 self._attack[c.kind] = c.text
 
-        self._deck_model.replace(
-            [
-                {
-                    "name": self._db.localized_name(r.card_id, lang) if r.card_id else r.name,
-                    "cost": r.cost,
-                    "total": r.total,
-                    "remaining": r.remaining,
-                    "cardId": r.card_id,
-                    "rarity": r.rarity,
-                    "gift": r.gift,
-                    "origin": r.origin,
-                }
-                for r in view.rows
-            ]
-        )
+        self._fill_deck_model()
         def _entries(rows):
             return [
                 {
@@ -1589,6 +1575,54 @@ class TrackerBridge(QObject):
         self._config.my_plays = bool(enabled)
         self._config.save()
         self.changed.emit()
+
+    @Property(bool, notify=changed)
+    def processCheck(self):
+        return self._config.hs_process_check
+
+    @Slot(bool)
+    def setProcessCheck(self, enabled: bool) -> None:
+        self._config.hs_process_check = bool(enabled)
+        self._config.save()
+        if not enabled:
+            self._hs_running = True
+        elif not self._assume_running:
+            # revérifier au prochain tour de boucle plutôt que dans ~3 s
+            self._hs_check_countdown = 0
+        self.changed.emit()
+
+    @Property(bool, notify=changed)
+    def hideDrawn(self):
+        return self._config.hide_drawn
+
+    @Slot(bool)
+    def setHideDrawn(self, hide: bool) -> None:
+        self._config.hide_drawn = bool(hide)
+        self._config.save()
+        # refresh() s'arrête tôt tant que la vue ne change pas : sans ce
+        # remplissage, l'option n'agirait qu'à la prochaine carte piochée
+        self._fill_deck_model()
+        self.changed.emit()
+
+    def _fill_deck_model(self) -> None:
+        lang = self._config.language
+        hide = self._config.hide_drawn
+        self._deck_model.replace(
+            [
+                {
+                    "name": self._db.localized_name(r.card_id, lang) if r.card_id else r.name,
+                    "cost": r.cost,
+                    "total": r.total,
+                    "remaining": r.remaining,
+                    "cardId": r.card_id,
+                    "rarity": r.rarity,
+                    "gift": r.gift,
+                    "origin": r.origin,
+                }
+                for r in self._view.rows
+                if not (hide and r.remaining == 0)
+            ]
+        )
 
     @Property(QObject, constant=True)
     def myEffectsModel(self):

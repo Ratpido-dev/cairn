@@ -885,3 +885,103 @@ def test_les_apercus_sont_rattaches_a_leur_panneau():
             del engine
     finally:
         bridge.shutdown()
+
+
+def test_option_masquer_les_cartes_piochees(tmp_path, monkeypatch):
+    """#4 : les cartes épuisées peuvent quitter la liste au lieu d'être barrées.
+
+    Le basculement doit agir tout de suite (sans attendre la carte suivante),
+    et le défaut reste l'affichage grisé : liste du deck complète.
+    """
+    # l'option est sauvegardée au basculement : jamais dans la vraie config
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    from PySide6.QtGui import QGuiApplication
+
+    from src.cairn.config import Config
+    from src.cairn.ui.bridge import TrackerBridge
+    from tools.panel import FixtureReplayer
+
+    app = QGuiApplication.instance() or QGuiApplication([])  # noqa: F841
+    replayer = FixtureReplayer(speed=1)
+    try:
+        bridge = TrackerBridge(
+            logs_root=replayer.logs_root,
+            poll_ms=100_000,
+            history_path=replayer.history_path,
+            assume_running=True,
+        )
+        replayer._chunk = 2_000_000
+        replayer.step()
+        bridge.refresh()
+
+        model = bridge.deckModel
+        role = {v: k for k, v in model.roleNames().items()}[b"remaining"]
+
+        def restants():
+            return [model.data(model.index(i, 0), role) for i in range(model.rowCount())]
+
+        assert not bridge.hideDrawn
+        complet = restants()
+        assert 0 in complet, "la fixture devrait avoir une carte épuisée"
+
+        bridge.setHideDrawn(True)
+        assert restants() == [n for n in complet if n > 0]
+        assert Config.load().hide_drawn
+
+        bridge.setHideDrawn(False)
+        assert restants() == complet
+        bridge.shutdown()
+    finally:
+        replayer.cleanup()
+
+
+def test_verification_du_processus_desactivable(tmp_path, monkeypatch):
+    """#2 : un port natif n'a pas de Hearthstone.exe, pgrep ne le voit jamais.
+
+    Couper la vérification doit faire considérer le jeu lancé — tout de suite,
+    au rafraîchissement suivant, et au prochain démarrage de Cairn.
+    """
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    import subprocess
+
+    from PySide6.QtGui import QGuiApplication
+
+    from src.cairn.ui.bridge import TrackerBridge
+
+    # pgrep ne trouve rien : comme sur hearthstone-linux-gui
+    vrai_run = subprocess.run
+
+    def run(cmd, *a, **kw):
+        if cmd and cmd[0] == "pgrep":
+            return subprocess.CompletedProcess(cmd, 1)
+        return vrai_run(cmd, *a, **kw)
+
+    monkeypatch.setattr(subprocess, "run", run)
+
+    app = QGuiApplication.instance() or QGuiApplication([])  # noqa: F841
+
+    def pont():
+        return TrackerBridge(logs_root=tmp_path, poll_ms=100_000,
+                             history_path=tmp_path / "h.sqlite")
+
+    bridge = pont()
+    try:
+        assert bridge.processCheck
+        bridge.refresh()
+        assert not bridge.hsRunning
+
+        bridge.setProcessCheck(False)
+        assert bridge.hsRunning
+        bridge.refresh()               # la boucle ne doit pas le contredire
+        assert bridge.hsRunning
+    finally:
+        bridge.shutdown()
+
+    relance = pont()                   # réglage relu au démarrage
+    try:
+        assert relance.hsRunning
+        relance.setProcessCheck(True)  # retour à la détection
+        relance.refresh()
+        assert not relance.hsRunning
+    finally:
+        relance.shutdown()
