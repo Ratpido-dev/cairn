@@ -9,7 +9,7 @@ longue session. À titre de comparaison, Firestone sous Wine tourne autour de 4 
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Qt](https://img.shields.io/badge/PySide6-Qt%20Quick-41CD52?logo=qt&logoColor=white)
 [![tests](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml/badge.svg)](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml)
-![Tests](https://img.shields.io/badge/tests-419%20verts-10B981)
+![Tests](https://img.shields.io/badge/tests-456%20verts-10B981)
 ![Licence](https://img.shields.io/badge/licence-MIT-F59E0B)
 ![Plateforme](https://img.shields.io/badge/Linux-Wayland%20%7C%20X11-0B0F17?logo=linux&logoColor=white)
 
@@ -95,6 +95,8 @@ PlayOnLinux, wine nu). En cas de doute : `export CAIRN_HS_PREFIX=/chemin/vers/le
 Hearthstone tourne sans Wine ? Vise directement les journaux du jeu :
 `export CAIRN_HS_LOGS=/chemin/vers/Logs`. Cairn se contente alors de les lire —
 il ne peut pas écrire le `log.config` du jeu, qui vit dans le prefix.
+Les versions natives n'ont pas de `Hearthstone.exe` à détecter : coupe aussi
+« Vérifier que Hearthstone est lancé » dans le launcher.
 
 ## Ce que Cairn montre
 

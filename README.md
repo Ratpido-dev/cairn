@@ -9,7 +9,7 @@ sits around 4 GB.
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Qt](https://img.shields.io/badge/PySide6-Qt%20Quick-41CD52?logo=qt&logoColor=white)
 [![tests](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml/badge.svg)](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml)
-![Tests](https://img.shields.io/badge/tests-419%20passing-10B981)
+![Tests](https://img.shields.io/badge/tests-456%20passing-10B981)
 ![License](https://img.shields.io/badge/license-MIT-F59E0B)
 ![Platform](https://img.shields.io/badge/Linux-Wayland%20%7C%20X11-0B0F17?logo=linux&logoColor=white)
 
@@ -95,6 +95,8 @@ PlayOnLinux, plain wine). If in doubt: `export CAIRN_HS_PREFIX=/path/to/the/pref
 Running Hearthstone without Wine? Point Cairn straight at the game's logs
 instead: `export CAIRN_HS_LOGS=/path/to/Logs`. Cairn then only reads them — it
 cannot write Hearthstone's `log.config` for you, since that lives in the prefix.
+Native ports have no `Hearthstone.exe` to detect, so also turn off "Check that
+Hearthstone is running" in the launcher.
 
 ## What Cairn shows
 

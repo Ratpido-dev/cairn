@@ -4,6 +4,37 @@ Les versions suivent [SemVer](https://semver.org/lang/fr/). Ce fichier dit ce qu
 change **pour qui utilise Cairn** ; le détail des décisions est dans
 [`docs/CAHIER_DES_CHARGES.md`](docs/CAHIER_DES_CHARGES.md).
 
+## [1.0.4] — 2026-10-01
+
+### Versions natives de Hearthstone (issue #2)
+
+- Nouvelle variable `CAIRN_HS_LOGS` (et clé de configuration `hs_logs`) : elle vise
+  directement le dossier `Logs/` du jeu, sans prefix Wine. Pour les portages natifs
+  comme hearthstone-linux-gui, Bottles ou les montages exotiques.
+- Nouveau réglage « Vérifier que Hearthstone est lancé », à couper pour ces versions
+  natives : sans `Hearthstone.exe`, le jeu n'était jamais détecté et les panneaux
+  restaient cachés.
+- `cairn-doctor` fonctionne sans prefix au lieu de sortir en erreur.
+- Le message « Hearthstone introuvable » mentionne `CAIRN_HS_LOGS`.
+
+### Suivi de partie
+
+- **Secrets en double en Wild** (issue #3) : chaque secret apparaissait une fois par
+  réimpression (Barrière de glace trois fois). Il n'apparaît plus qu'une fois, les
+  cartes du format Classique sont exclues du Wild, et les exemplaires déjà joués
+  sont comptés quelle que soit leur version. Les secrets Paladin et Voleur étaient
+  aussi en double en Standard.
+- **Cartes piochées** (issue #4) : nouveau réglage « Masquer les cartes piochées » pour
+  retirer de la liste une carte dont le dernier exemplaire a quitté le deck, au lieu
+  de la griser. Désactivé par défaut.
+
+### Installation
+
+- KDE hors Arch (Fedora…) : `install.sh` ne rechargeait pas le script KWin
+  `cairn-follow`, faute de trouver `qdbus6`. Il essaie désormais tous les clients
+  D-Bus, et demande de fermer la session si aucun n'aboutit au lieu d'annoncer une
+  réussite.
+
 ## [1.0.3] — 2026-09-15
 
 ### Double écran (issue #1)
