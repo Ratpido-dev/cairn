@@ -50,7 +50,7 @@ ColumnLayout {
             cardId: model.known ? model.cardId : ""
             label: model.known
                 ? model.label
-                : (tracker.language === "en" ? "? hidden card" : "? carte cachée")
+                : (["? carte cachée", "? hidden card", "? 未知牌"][tracker.langIndex])
             unknown: !model.known
             cost: -1
             rarity: model.rarity

@@ -446,7 +446,8 @@ def _opponent_coin_entity(game: Game, opp_id: int | None) -> int | None:
     return max(depart, key=lambda e: e.entity_id).entity_id if depart else None
 
 
-def _opponent_hand_slots(game: Game, db: CardsDb, local: int) -> list[OppHandSlot]:
+def _opponent_hand_slots(game: Game, db: CardsDb, local: int,
+                         lang: str = "fr") -> list[OppHandSlot]:
     """Toute la main adverse, une ligne par carte, cachées comprises."""
     opp_id = next((p for p in game.player_names if p != local), None)
     piece = _opponent_coin_entity(game, opp_id)
@@ -463,7 +464,7 @@ def _opponent_hand_slots(game: Game, db: CardsDb, local: int) -> list[OppHandSlo
         creator_id = _creator_card_id(game, ent.entity_id)
         creator = db.by_card_id.get(creator_id)
         if card is None and ent.entity_id == piece:
-            card = {"name": t("the_coin", "fr"), "cost": 0, "rarity": ""}
+            card = {"name": t("the_coin", lang), "cost": 0, "rarity": ""}
         slots.append(
             OppHandSlot(
                 label=card["name"] if card else "?",
@@ -605,7 +606,8 @@ def _graveyard(game: Game, db: CardsDb, player_id: int | None) -> list[DeadMinio
     return sorted(_group(rows, key=lambda r: r.card_id), key=lambda r: (-r.cost, r.label))
 
 
-def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb) -> DeckView:
+def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb,
+                      lang: str = "fr") -> DeckView:
     view = DeckView()
     local = game.local_player_id()
 
@@ -779,7 +781,7 @@ def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb) -> DeckV
 
     if local is not None:
         view.opponent_hand = _known_opponent_hand(game, db, local)
-        view.opponent_hand_slots = _opponent_hand_slots(game, db, local)
+        view.opponent_hand_slots = _opponent_hand_slots(game, db, local, lang)
         view.my_hand = _in_zones(game, db, local, ("HAND",))
         view.my_graveyard = _graveyard(game, db, local)
         opp_id = next((p for p in game.player_names if p != local), None)

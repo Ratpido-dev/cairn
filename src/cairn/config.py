@@ -37,7 +37,7 @@ class Config:
     # Carte dont le dernier exemplaire a quitté le deck : grisée et barrée
     # (False — la liste du deck reste complète) ou retirée de la liste (#4).
     hide_drawn: bool = False
-    language: str = "fr"  # "fr" | "en"
+    language: str = "fr"  # "fr" | "en" | "zh"
     hs_prefix: str = ""  # force le prefix Wine/Proton si la détection se trompe
     # Vise directement un dossier Logs/, sans prefix : installations natives
     # (hearthstone-linux-gui et consorts), où « drive_c » n'existe pas.
@@ -141,9 +141,14 @@ class Config:
         cfg.my_hand = bool(data.get("my_hand", True))
         cfg.my_plays = bool(data.get("my_plays", True))
         cfg.hide_drawn = bool(data.get("hide_drawn", False))
-        cfg.language = "en" if data.get("language") == "en" else "fr"
+        langue = data.get("language")
+        cfg.language = langue if langue in ("fr", "en", "zh") else "fr"
         cfg.hs_prefix = str(data.get("hs_prefix") or "")
         cfg.hs_logs = str(data.get("hs_logs") or "")
+        # Manquait ici : la commande de lancement était bien écrite par save()
+        # (asdict la reprend) mais jamais relue, donc perdue à chaque
+        # redémarrage — elle ne survivait pas à la session qui l'avait saisie.
+        cfg.hs_launch_command = str(data.get("hs_launch_command") or "")
         cfg.hs_process_check = bool(data.get("hs_process_check", True))
         cfg.log_rotation = bool(data.get("log_rotation", False))
         cfg.archive_sessions = bool(data.get("archive_sessions", True))

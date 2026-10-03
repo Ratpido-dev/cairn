@@ -24,109 +24,133 @@ Window {
     RadialBackdrop { anchors.fill: parent }
 
     // ---- traduction : tr("clé") suit tracker.language ----------------------
-    readonly property bool en: tracker.language === "en"
     readonly property var strings: ({
-        "tagline":   ["tracker Hearthstone natif Linux", "native Linux Hearthstone tracker"],
-        "hsOn":      ["● Hearthstone détecté", "● HS running"],
-        "hsOff":     ["○ en attente de HS", "○ HS not running"],
-        "hsForced":  ["● détection du jeu désactivée", "● game detection off"],
-        "addons":    ["ADD-ONS DU BANDEAU", "COUNTER BAR ADD-ONS"],
-        "windows":   ["FENÊTRES", "WINDOWS"],
-        "sharing":   ["PARTAGE DE PARTIES", "GAME SHARING"],
+        "tagline":   ["tracker Hearthstone natif Linux", "native Linux Hearthstone tracker",
+                      "原生 Linux 炉石传说追踪器"],
+        "hsOn":      ["● Hearthstone détecté", "● HS running", "● 已检测到炉石传说"],
+        "hsOff":     ["○ en attente de HS", "○ HS not running", "○ 等待炉石启动"],
+        "hsForced":  ["● détection du jeu désactivée", "● game detection off", "● 已关闭游戏检测"],
+        "addons":    ["ADD-ONS DU BANDEAU", "COUNTER BAR ADD-ONS", "悬浮条组件"],
+        "windows":   ["FENÊTRES", "WINDOWS", "窗口"],
+        "sharing":   ["PARTAGE DE PARTIES", "GAME SHARING", "对局分享"],
         "shareOn":   ["Envoyer mes parties au corpus public",
-                      "Send my games to the public corpus"],
+                      "Send my games to the public corpus",
+                      "把我的对局发送到公开语料库"],
         "shareHint": ["Facultatif. Sert à corriger le lecteur de journaux et à nourrir d'autres projets. Le corpus est ouvert : tout le monde peut le retélécharger, toi compris.",
-                      "Optional. Used to fix the log parser and feed other projects. The corpus is open: anyone can download it back, you included."],
+                      "Optional. Used to fix the log parser and feed other projects. The corpus is open: anyone can download it back, you included.",
+                      "可选。用于修好日志解析器，并供其他项目使用。语料库是公开的：任何人都能重新下载，包括你自己。"],
         "anonymAlways": ["Ton pseudo et celui de l'adversaire sont toujours remplacés par des jetons anonymes avant l'envoi. Ce n'est pas un réglage.",
-                      "Your battletag and your opponent's are always replaced by anonymous tokens before sending. This is not a setting."],
-        "rank":      ["Mon rang", "My rank"],
+                      "Your battletag and your opponent's are always replaced by anonymous tokens before sending. This is not a setting.",
+                      "发送之前，你和对手的战网昵称总会被替换成匿名代号。这不是一个开关。"],
+        "rank":      ["Mon rang", "My rank", "我的段位"],
         "rankHint":  ["Hearthstone ne l'écrit dans aucun journal : il ne peut être que déclaré. Facultatif.",
-                      "Hearthstone writes it in no log file, so it can only be declared. Optional."],
-        "queued":    ["En attente : ", "Queued: "],
-        "installId": ["Mon identifiant :", "My identifier:"],
+                      "Hearthstone writes it in no log file, so it can only be declared. Optional.",
+                      "炉石不会把它写进任何日志，所以只能手动声明。可选。"],
+        "queued":    ["En attente : ", "Queued: ", "排队中："],
+        "installId": ["Mon identifiant :", "My identifier:", "我的标识符："],
         "installIdHint": ["Il regroupe tes envois. Sert à les retrouver dans le corpus, ou à en demander la suppression. Aucun lien avec ton compte Blizzard.",
-                          "It groups your uploads. Use it to find them back in the corpus, or to request their deletion. Unrelated to your Blizzard account."],
-        "copied":    ["copié", "copied"],
-        "copy":      ["copier", "copy"],
-        "archives":  ["ARCHIVES DE PARTIES", "GAME ARCHIVES"],
-        "archiveOn": ["Archiver les journaux de session", "Archive session logs"],
+                          "It groups your uploads. Use it to find them back in the corpus, or to request their deletion. Unrelated to your Blizzard account.",
+                          "它用于归集你的上传内容，方便在语料库里找回，或申请删除。与你的暴雪账号无关。"],
+        "copied":    ["copié", "copied", "已复制"],
+        "copy":      ["copier", "copy", "复制"],
+        "archives":  ["ARCHIVES DE PARTIES", "GAME ARCHIVES", "对局归档"],
+        "archiveOn": ["Archiver les journaux de session", "Archive session logs", "归档会话日志"],
         "archiveHint": ["Hearthstone efface ses vieux journaux ; l'historique ne garde qu'un résumé. Compressé ×18 : moins d'1 Mo par session.",
-                        "Hearthstone deletes its old logs; history keeps only a summary. Compressed ×18: under 1 MB per session."],
-        "archived":  ["Archivé : ", "Archived: "],
-        "seeQueue":  ["voir le dossier", "open folder"],
-        "clearQueue":["tout effacer", "clear"],
-        "sendNow":   ["envoyer maintenant", "send now"],
+                        "Hearthstone deletes its old logs; history keeps only a summary. Compressed ×18: under 1 MB per session.",
+                        "炉石会删掉旧日志；历史记录只保留摘要。压缩率约 ×18：每场不到 1 MB。"],
+        "archived":  ["Archivé : ", "Archived: ", "已归档："],
+        "seeQueue":  ["voir le dossier", "open folder", "打开文件夹"],
+        "clearQueue":["tout effacer", "clear", "全部清除"],
+        "sendNow":   ["envoyer maintenant", "send now", "立即发送"],
         "noEndpoint":["Aucun point de collecte n'est configuré dans cette version : les parties restent ici, sur ta machine.",
-                      "No collection endpoint is configured in this build: games stay here, on your machine."],
-        "oppPanel":  ["Panneau adversaire (à gauche)", "Opponent panel (left)"],
-        "handDots":  ["Pastilles sous la main adverse", "Dots under opponent's hand"],
-        "myHand":    ["Ma main dans le panneau", "My hand in the panel"],
-        "myPlays":   ["Mes cartes jouées dans le panneau", "Cards I played, in the panel"],
-        "procCheck": ["Vérifier que Hearthstone est lancé", "Check that Hearthstone is running"],
+                      "No collection endpoint is configured in this build: games stay here, on your machine.",
+                      "这个版本没有配置收集端点：对局只会留在你自己的机器上。"],
+        "oppPanel":  ["Panneau adversaire (à gauche)", "Opponent panel (left)", "对手面板（左侧）"],
+        "handDots":  ["Pastilles sous la main adverse", "Dots under opponent's hand", "对手手牌下方的标记点"],
+        "myHand":    ["Ma main dans le panneau", "My hand in the panel", "面板中显示我的手牌"],
+        "myPlays":   ["Mes cartes jouées dans le panneau", "Cards I played, in the panel", "面板中显示我出过的牌"],
+        "procCheck": ["Vérifier que Hearthstone est lancé", "Check that Hearthstone is running", "检查炉石是否已启动"],
         "procCheckHint": ["À couper pour les versions natives (hearthstone-linux-gui) : sans Hearthstone.exe, le jeu n'est jamais détecté.",
-                          "Turn off for native ports (hearthstone-linux-gui): without Hearthstone.exe, the game is never detected."],
+                          "Turn off for native ports (hearthstone-linux-gui): without Hearthstone.exe, the game is never detected.",
+                          "原生移植版（hearthstone-linux-gui）请关闭：没有 Hearthstone.exe，游戏永远检测不到。"],
         "hideDrawn": ["Masquer les cartes piochées (sinon grisées)",
-                      "Hide drawn cards (otherwise dimmed)"],
+                      "Hide drawn cards (otherwise dimmed)",
+                      "隐藏已抽到的牌（否则显示为灰色）"],
         "handDotsHint": ["Tour d'arrivée, cadeau, vignette. À caler une fois sous son éventail : la position est retenue.",
-                         "Arrival turn, gift, tile. Drag it once under their hand: the position is remembered."],
-        "sizeDeck":  ["Taille — mon deck", "Size — my deck"],
-        "sizeOpp":   ["Taille — adversaire", "Size — opponent"],
-        "sizeBar":   ["Taille — widgets flottants", "Size — floating widgets"],
-        "resetPos":  ["Replacer les widgets", "Reset widget positions"],
+                         "Arrival turn, gift, tile. Drag it once under their hand: the position is remembered.",
+                         "到手回合、赠牌、牌面。在他的手牌下方对齐一次即可，位置会被记住。"],
+        "sizeDeck":  ["Taille — mon deck", "Size — my deck", "尺寸 —— 我的套牌"],
+        "sizeOpp":   ["Taille — adversaire", "Size — opponent", "尺寸 —— 对手"],
+        "sizeBar":   ["Taille — widgets flottants", "Size — floating widgets", "尺寸 —— 悬浮组件"],
+        "resetPos":  ["Replacer les widgets", "Reset widget positions", "重置组件位置"],
         "resetPosHint": ["Compteurs, dégâts et secrets retournent à leur place d'origine",
-                         "Counters, damage and secrets return to their default spot"],
-        "myDecks":   ["MES DECKS", "MY DECKS"],
-        "overall":   ["Bilan global : ", "Overall: "],
+                         "Counters, damage and secrets return to their default spot",
+                         "计数器、伤害和奥秘都会回到初始位置"],
+        "myDecks":   ["MES DECKS", "MY DECKS", "我的套牌"],
+        "overall":   ["Bilan global : ", "Overall: ", "总战绩："],
         "noGames":   ["Aucune partie enregistrée — joue avec Cairn ouvert.",
-                      "No games recorded yet — play with the tracker open."],
+                      "No games recorded yet — play with the tracker open.",
+                      "还没有记录到对局 —— 请开着 Cairn 打一局。"],
         "clickDeck": ["clique un deck pour filtrer les classes et les parties",
-                      "click a deck to filter classes and games"],
-        "game1":     [" partie", " game"],
-        "games":     [" parties", " games"],
-        "archive":   ["archiver", "archive"],
-        "addTitle":  ["AJOUTER UNE PARTIE À LA MAIN", "ADD A GAME MANUALLY"],
+                      "click a deck to filter classes and games",
+                      "点击一套牌可筛选职业和对局"],
+        "game1":     [" partie", " game", " 场"],
+        "games":     [" parties", " games", " 场"],
+        "archive":   ["archiver", "archive", "归档"],
+        "addTitle":  ["AJOUTER UNE PARTIE À LA MAIN", "ADD A GAME MANUALLY", "手动添加对局"],
         "addHint":   ["Quand le journal de Hearthstone a lâché en pleine partie.",
-                      "For when Hearthstone's log died mid-game."],
-        "deck":      ["Deck", "Deck"],
-        "opponent":  ["Adversaire", "Opponent"],
-        "win":       ["✓ Victoire", "✓ Win"],
-        "loss":      ["✗ Défaite", "✗ Loss"],
-        "added":     ["Partie ajoutée.", "Game added."],
-        "vsClasses": ["CONTRE LES CLASSES", "AGAINST CLASSES"],
-        "recent":    ["DERNIÈRES PARTIES", "RECENT GAMES"],
-        "vs":        ["vs ", "vs "],
-        "warnTitle": ["Attention — action irréversible", "Warning — this cannot be undone"],
-        "no":        ["Non, annuler", "No, cancel"],
-        "yes":       ["Oui, supprimer", "Yes, delete"],
+                      "For when Hearthstone's log died mid-game.",
+                      "用于炉石日志在对局中途断掉的情况。"],
+        "deck":      ["Deck", "Deck", "套牌"],
+        "opponent":  ["Adversaire", "Opponent", "对手"],
+        "win":       ["✓ Victoire", "✓ Win", "✓ 胜利"],
+        "loss":      ["✗ Défaite", "✗ Loss", "✗ 失败"],
+        "added":     ["Partie ajoutée.", "Game added.", "对局已添加。"],
+        "vsClasses": ["CONTRE LES CLASSES", "AGAINST CLASSES", "对各职业战绩"],
+        "recent":    ["DERNIÈRES PARTIES", "RECENT GAMES", "最近对局"],
+        "vs":        ["vs ", "vs ", "对阵 "],
+        "warnTitle": ["Attention — action irréversible", "Warning — this cannot be undone",
+                      "注意 —— 此操作不可撤销"],
+        "no":        ["Non, annuler", "No, cancel", "不，取消"],
+        "yes":       ["Oui, supprimer", "Yes, delete", "是，删除"],
         "noPrefix":  ["⚠ Hearthstone est introuvable. Indique le dossier qui contient « drive_c » (variable CAIRN_HS_PREFIX), ou directement son dossier Logs pour une version native (CAIRN_HS_LOGS), puis relance Cairn — ou lance « python tools/doctor.py » pour un diagnostic.",
-                      "⚠ Hearthstone not found. Point Cairn at the folder containing “drive_c” (CAIRN_HS_PREFIX), or straight at its Logs folder for a native port (CAIRN_HS_LOGS), and restart — or run “python tools/doctor.py” to diagnose."],
+                      "⚠ Hearthstone not found. Point Cairn at the folder containing “drive_c” (CAIRN_HS_PREFIX), or straight at its Logs folder for a native port (CAIRN_HS_LOGS), and restart — or run “python tools/doctor.py” to diagnose.",
+                      "⚠ 找不到炉石传说。请指定包含「drive_c」的文件夹（环境变量 CAIRN_HS_PREFIX）；若是原生移植版，就直接指定它的 Logs 文件夹（CAIRN_HS_LOGS），然后重启 Cairn —— 或者运行「python tools/doctor.py」做一次诊断。"],
         "logsOff":   ["⚠ Hearthstone n'écrit pas ses journaux : Cairn ne peut rien suivre. Un clic active l'enregistrement, puis REDÉMARRE le jeu.",
-                      "⚠ Hearthstone isn't writing its logs, so Cairn can't track anything. One click enables them, then RESTART the game."],
+                      "⚠ Hearthstone isn't writing its logs, so Cairn can't track anything. One click enables them, then RESTART the game.",
+                      "⚠ 炉石没有在写日志：Cairn 什么都追踪不到。点一下即可开启日志记录，然后重启游戏。"],
         "logCapped": ["⚠ Hearthstone plafonne ses journaux à 10 Mo : il cesse d'écrire en pleine session et Cairn devient aveugle. Un clic lève le plafond, puis REDÉMARRE le jeu.",
-                      "⚠ Hearthstone caps its logs at 10 MB: it stops writing mid-session and Cairn goes blind. One click lifts the cap, then RESTART the game."],
-        "enableLogs":["Activer les journaux du jeu", "Enable game logs"],
-        "liftCap":   ["Lever le plafond des journaux", "Lift the log size cap"],
-        "prefixFound":["Jeu détecté : ", "Game found at: "],
-        "archetypes":["Ses decks", "Their decks"],
-        "refDecks":["Listes de référence", "Reference lists"],
-        "refName":["nom", "name"],
+                      "⚠ Hearthstone caps its logs at 10 MB: it stops writing mid-session and Cairn goes blind. One click lifts the cap, then RESTART the game.",
+                      "⚠ 炉石把日志上限设在 10 MB：对局进行到一半就会停止写入，Cairn 会变成瞎子。点一下解除上限，然后重启游戏。"],
+        "enableLogs":["Activer les journaux du jeu", "Enable game logs", "开启游戏日志"],
+        "liftCap":   ["Lever le plafond des journaux", "Lift the log size cap", "解除日志大小上限"],
+        "prefixFound":["Jeu détecté : ", "Game found at: ", "已检测到游戏："],
+        "archetypes":["Ses decks", "Their decks", "对手的套牌"],
+        "refDecks":["Listes de référence", "Reference lists", "参考牌表"],
+        "refName":["nom", "name", "名称"],
         "refCode":["colle un ou plusieurs decks ici (### Nom + code)",
-                   "paste one or more decks here (### Name + code)"],
+                   "paste one or more decks here (### Name + code)",
+                   "在这里粘贴一份或多份套牌（### 名称 + 代码）"],
         "archetypeHint":["Déduit des cartes venues de son deck. « Deck non reconnu » = rien de\nreconnaissable n\u2019a été montré — jamais une supposition.",
-                         "Inferred from cards played out of their deck. \u201cUnidentified\u201d\nmeans nothing recognisable was shown \u2014 never a guess."],
-        "launchHs":["Lancer Hearthstone", "Launch Hearthstone"],
+                         "Inferred from cards played out of their deck. \u201cUnidentified\u201d\nmeans nothing recognisable was shown \u2014 never a guess.",
+                         "根据从对手牌库打出的牌推断。「未知套牌」表示\n没出现任何可识别的特征 —— 从不猜测。"],
+        "launchHs":["Lancer Hearthstone", "Launch Hearthstone", "启动炉石传说"],
         "launchUnknown":["Aucun lanceur détecté. Colle ci-dessous la commande "
                          + "qui lance Hearthstone chez toi.",
                          "No launcher detected. Paste the command that starts "
-                         + "Hearthstone on your machine below."],
+                         + "Hearthstone on your machine below.",
+                         "没有检测到启动器。请在下面粘贴"
+                         + "你机器上启动炉石传说的命令。"],
         "launchCmdHint":["Commande de lancement (si la détection échoue)",
-                         "Launch command (if detection fails)"],
+                         "Launch command (if detection fails)",
+                         "启动命令（检测失败时使用）"],
         "logFull":   ["⚠ Le journal de Hearthstone est plein (limite Blizzard : 10 Mo par session) — le suivi est aveugle. REDÉMARRE HEARTHSTONE pour reprendre le tracking.",
-                      "⚠ Hearthstone's log is full (Blizzard limit: 10 MB per session) — tracking is blind. RESTART HEARTHSTONE to resume."]
+                      "⚠ Hearthstone's log is full (Blizzard limit: 10 MB per session) — tracking is blind. RESTART HEARTHSTONE to resume.",
+                      "⚠ 炉石的日志已满（暴雪限制：每场 10 MB）—— 追踪已失效。重启炉石即可恢复追踪。"]
     })
     function tr(key) {
         var pair = strings[key]
-        return pair === undefined ? key : pair[en ? 1 : 0]
+        return pair === undefined ? key : pair[tracker.langIndex]
     }
 
     // Menu déroulant habillé de bout en bout. Le style Basic ne peint QUE le
@@ -401,9 +425,9 @@ Window {
                 }
                 Item { Layout.fillWidth: true }
 
-                // bascule de langue : segmenté FR | EN, la case active éclairée
+                // bascule de langue : segmenté FR | EN | 中, la case active éclairée
                 Rectangle {
-                    width: 62
+                    width: 92
                     height: 24
                     radius: 12
                     color: home.thm.sunken
@@ -413,13 +437,14 @@ Window {
                         anchors.centerIn: parent
                         spacing: 0
                         Repeater {
-                            model: ["fr", "en"]
+                            model: ["fr", "en", "zh"]
                             delegate: Rectangle {
                                 id: langCase
+                                required property int index
                                 required property string modelData
                                 readonly property bool actif:
                                     tracker.language === modelData
-                                width: 29; height: 20; radius: 10
+                                width: 30; height: 20; radius: 10
                                 color: actif ? Qt.alpha(home.thm.gold, 0.20)
                                              : "transparent"
                                 border.width: 1
@@ -433,7 +458,7 @@ Window {
                                 }
                                 Text {
                                     anchors.centerIn: parent
-                                    text: langCase.modelData.toUpperCase()
+                                    text: ["FR", "EN", "中"][langCase.index]
                                     color: langCase.actif ? home.thm.goldHi
                                                           : home.thm.textFaint
                                     font.pixelSize: 10
@@ -1431,12 +1456,12 @@ Window {
                                 ToolTip.delay: 350
                                 ToolTip.text:
                                     (model.shapeWin !== ""
-                                     ? (tracker.language === "en" ? "Wins: " : "Victoires : ")
+                                     ? (["Victoires : ", "Wins: ", "胜场："][tracker.langIndex])
                                        + model.shapeWin : "")
                                     + (model.shapeWin !== "" && model.shapeLoss !== ""
                                        ? "\n" : "")
                                     + (model.shapeLoss !== ""
-                                       ? (tracker.language === "en" ? "Losses: " : "Défaites : ")
+                                       ? (["Défaites : ", "Losses: ", "负场："][tracker.langIndex])
                                          + model.shapeLoss : "")
                             }
                             RowLayout {

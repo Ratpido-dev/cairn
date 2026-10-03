@@ -54,10 +54,14 @@ def ensure_cards(verbose: bool = True) -> bool:
         print(f"Première utilisation : téléchargement de la base de cartes "
               f"vers {CARDS_DIR} …", flush=True)
     try:
-        from .cards_fetch import fetch
+        from .cards_fetch import TARGETS, fetch
 
-        fetch("frFR")
-        fetch("enUS")
+        # Toutes les locales de ``cards_fetch.TARGETS`` : la base principale
+        # (frFR) porte les champs dérivés, les autres n'apportent que la table
+        # id → nom de la langue choisie. Boucler sur TARGETS évite d'oublier
+        # une langue le jour où on en ajoute une.
+        for locale in TARGETS:
+            fetch(locale)
     except Exception as err:  # réseau coupé, miroir en panne…
         print(f"Échec du téléchargement de la base de cartes : {err}", file=sys.stderr)
         print("Réessaie plus tard avec :  cairn-cards", file=sys.stderr)

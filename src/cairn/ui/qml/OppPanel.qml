@@ -121,7 +121,7 @@ Window {
                     spacing: 8
 
                 Text {
-                    text: (tracker.language === "en" ? "CARDS PLAYED (" : "CARTES JOUÉES (")
+                    text: (["CARTES JOUÉES (", "CARDS PLAYED (", "已出牌 ("][tracker.langIndex])
                           + oppList.count + ")"
                     color: opp.muted
                     font.pixelSize: 10
@@ -139,7 +139,7 @@ Window {
 
                 // ce qui l'attend dans son atlas, dans l'ordre où il le recevra
                 CardList {
-                    title: tracker.language === "en" ? "THEIR GODFREY ATLAS" : "SON ATLAS DE GODFREY"
+                    title: ["SON ATLAS DE GODFREY", "THEIR GODFREY ATLAS", "对手的高弗雷图册"][tracker.langIndex]
                     model: tracker.oppAtlasModel
                     tint: "#c9a227"
                     maxRows: 8
@@ -151,7 +151,7 @@ Window {
                 // Le survol montre la carte SOURCE de l'effet et son texte :
                 // « Âme brisée » seule ne dit pas ce qu'elle fait.
                 CardList {
-                    title: tracker.language === "en" ? "EFFECTS IN PLAY" : "EFFETS EN JEU"
+                    title: ["EFFETS EN JEU", "EFFECTS IN PLAY", "场上效果"][tracker.langIndex]
                     model: tracker.oppEffectsModel
                     tint: opp.danger
                     maxRows: 5
@@ -163,8 +163,7 @@ Window {
                 // qu'il est Chasseur, donc AVANT qu'il la pose : c'est le seul
                 // moment où l'information sert encore à quelque chose.
                 CardList {
-                    title: tracker.language === "en" ? "THEIR 1-COST PLAYED"
-                                                     : "SES CARTES À (1) JOUÉES"
+                    title: ["SES CARTES À (1) JOUÉES", "THEIR 1-COST PLAYED", "对手的 1 费牌"][tracker.langIndex]
                     model: tracker.oppReplayModel
                     tint: "#c9a227"
                     maxRows: 10
@@ -174,8 +173,7 @@ Window {
                 // Ce qu'on a vu de SON deck : un effet a révélé l'identité de
                 // quelques cartes qui y dorment encore. Rare, mais décisif.
                 CardList {
-                    title: tracker.language === "en" ? "KNOWN IN THEIR DECK"
-                                                     : "CONNUES DANS SON DECK"
+                    title: ["CONNUES DANS SON DECK", "KNOWN IN THEIR DECK", "已知在对手牌库"][tracker.langIndex]
                     model: tracker.oppDeckModel
                     tint: "#c9a227"
                     maxRows: 6
@@ -189,9 +187,9 @@ Window {
                 // même information, à l'endroit où le regard est déjà.)
 
                 CardList {
-                    title: (tracker.language === "en" ? "POSSIBLE SECRETS · " : "SECRETS POSSIBLES · ")
+                    title: (["SECRETS POSSIBLES · ", "POSSIBLE SECRETS · ", "可能的奥秘 · "][tracker.langIndex])
                            + tracker.oppSecretCount
-                           + (tracker.language === "en" ? " in play" : " en jeu")
+                           + ([" en jeu", " in play", " 个在场"][tracker.langIndex])
                            // classe RÉELLE du secret posé quand le jeu l'a
                            // publiée : elle n'est pas toujours celle du héros
                            // d'en face, et la liste serait sinon incompréhensible
@@ -239,7 +237,7 @@ Window {
                 }
 
                 CardList {
-                    title: tracker.language === "en" ? "GRAVEYARD" : "CIMETIÈRE"
+                    title: ["CIMETIÈRE", "GRAVEYARD", "墓地"][tracker.langIndex]
                     model: tracker.oppGraveyardModel
                     tint: opp.muted
                     onCardHovered: (cardId, note) => opp.setHover(cardId, note)

@@ -4,6 +4,28 @@ Les versions suivent [SemVer](https://semver.org/lang/fr/). Ce fichier dit ce qu
 change **pour qui utilise Cairn** ; le détail des décisions est dans
 [`docs/CAHIER_DES_CHARGES.md`](docs/CAHIER_DES_CHARGES.md).
 
+## [Unreleased]
+
+### Interface en chinois (zhCN)
+
+- Troisième langue d'interface : **中文**. Le sélecteur du launcher passe de
+  `FR | EN` à `FR | EN | 中`, et `"language": "zh"` est accepté dans
+  `~/.config/cairn/config.json`.
+- Tout suit : libellés, compteurs, noms de classes, ligues, fiches d'add-ons,
+  noms de cartes et textes de règles (HearthstoneJSON `zhCN`), et le rendu des
+  cartes au survol.
+- La base principale reste le **frFR** : c'est la seule qui porte les mécaniques,
+  `races`, `pos` et `imbue`. Comme l'anglais, le chinois n'ajoute qu'une table
+  `id → nom` (`cards.zhCN.json`) et un fichier de textes
+  (`cards.text.zhCN.json`), chargés à la demande. Repli sur le français quand
+  une carte manque — cf. `CardsDb.localized_name` et `CardsDb.text`.
+- `cairn-cards` télécharge désormais les trois locales, y compris sur une
+  première installation (`app.ensure_cards` boucle sur `cards_fetch.TARGETS`
+  au lieu de nommer frFR et enUS en dur). `cairn-doctor` contrôle aussi les
+  noms chinois.
+- Terminologie alignée sur les noms officiels du jeu : « 潜行者 » (Voleur),
+  « 灌注 » (Empreint), « 亡语 » (Râle d'agonie), « 高弗雷 » (Godfrey).
+
 ## [1.0.4] — 2026-10-01
 
 ### Versions natives de Hearthstone (issue #2)

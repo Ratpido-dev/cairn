@@ -38,7 +38,6 @@ Window {
             tracker.answerConsent(false)
     }
 
-    readonly property bool en: tracker.language === "en"
     // palette : voir Theme.qml (source unique du design system)
     readonly property Theme thm: Theme {}
     readonly property color bg: thm.bg
@@ -49,7 +48,9 @@ Window {
     readonly property color accent: thm.gold
     readonly property color good: thm.good
 
-    function t(fr, enTxt) { return consent.en ? enTxt : fr }
+    // Traduction : l'index vient de tracker.langIndex, donc le texte se
+    // retraduit tout seul au changement de langue (binding, pas d'appel).
+    function t(fr, enTxt, zh) { return [fr, enTxt, zh][tracker.langIndex] }
 
     Rectangle {
         anchors.fill: parent
@@ -76,14 +77,16 @@ Window {
                     Layout.fillWidth: true
                     Text {
                         text: consent.t("Aider à améliorer Cairn ?",
-                                        "Help improve Cairn?")
+                                        "Help improve Cairn?",
+                    "要帮助改进 Cairn 吗？")
                         color: consent.text
                         font.pixelSize: 19
                         font.bold: true
                     }
                     Text {
                         text: consent.t("Une seule question, posée une seule fois.",
-                                        "One question, asked once.")
+                                        "One question, asked once.",
+                    "只有一个问题，只问一次。")
                         color: consent.muted
                         font.pixelSize: 12
                     }
@@ -105,7 +108,8 @@ Window {
                     "fonctionne exactement pareil si tu refuses.",
                     "Cairn can send your game logs to a public corpus, to fix the log " +
                     "parser and feed other Hearthstone projects. This is optional: " +
-                    "Cairn works exactly the same if you decline.")
+                    "Cairn works exactly the same if you decline.",
+                    "Cairn 可以把你的对局日志发送到一个公开语料库，用来修好日志解析器，并供其他炉石相关项目使用。这是可选的：拒绝之后 Cairn 的运行方式完全相同。")
             }
 
             // ---- ce qui part, ce qui ne part pas ------------------------
@@ -150,7 +154,8 @@ Window {
                             "Le déroulé des parties : cartes jouées, tours, résultat, " +
                             "et le nom de tes decks.",
                             "The course of your games: cards played, turns, result, " +
-                            "and your deck names.")
+                            "and your deck names.",
+                    "对局过程：出过的牌、回合数、胜负结果，以及你的套牌名称。")
                     }
                     Ligne {
                         glyphe: "✓"; teinte: consent.good
@@ -160,7 +165,8 @@ Window {
                             "AVANT de quitter ta machine.",
                             "Player identifiers — yours and your opponent's — are " +
                             "replaced by anonymous tokens BEFORE anything leaves " +
-                            "your machine.")
+                            "your machine.",
+                    "玩家标识 —— 你和对手的 —— 会在任何数据离开你的机器之前替换成匿名代号。")
                     }
                     Ligne {
                         // le dire ICI et pas dans une politique de
@@ -172,7 +178,8 @@ Window {
                             "peut le retélécharger — toi le premier. Ce n'est pas une " +
                             "base privée.",
                             "The corpus is PUBLIC: whatever you share, anyone can " +
-                            "download back — you first. It is not a private database.")
+                            "download back — you first. It is not a private database.",
+                    "语料库是公开的：你分享的内容，任何人都能重新下载 —— 包括你自己。它不是私有数据库。")
                     }
                     Ligne {
                         glyphe: "✕"; teinte: consent.muted
@@ -180,7 +187,8 @@ Window {
                             "Jamais : ton compte Blizzard, ta collection, ton or, " +
                             "ton adresse e-mail, ni quoi que ce soit hors de Hearthstone.",
                             "Never: your Blizzard account, collection, gold, email, " +
-                            "or anything outside Hearthstone.")
+                            "or anything outside Hearthstone.",
+                    "绝不包含：你的暴雪账号、卡牌收藏、金币、邮箱，以及任何炉石之外的内容。")
                     }
                     Ligne {
                         // ↺ et non ⟲ : le second est si fin qu'à 12 px il se
@@ -190,7 +198,8 @@ Window {
                             "Réversible à tout moment depuis le launcher, et ce qui " +
                             "attendait d'être envoyé est alors effacé.",
                             "Reversible at any time from the launcher; anything still " +
-                            "queued is deleted.")
+                            "queued is deleted.",
+                    "随时可以在启动器里撤销；届时仍在排队等待发送的内容会被删除。")
                     }
                 }
             }
@@ -204,7 +213,8 @@ Window {
                     "Tu peux voir exactement ce qui est prêt à partir depuis le " +
                     "launcher, avant tout envoi.",
                     "You can inspect exactly what is queued from the launcher, " +
-                    "before anything is sent.")
+                    "before anything is sent.",
+                    "在发送任何内容之前，你可以在启动器中查看具体有哪些排队待发。")
             }
 
             // ---- les deux boutons, de poids égal ------------------------
@@ -241,11 +251,13 @@ Window {
                 }
 
                 Bouton {
-                    libelle: consent.t("Non merci", "No thanks")
+                    libelle: consent.t("Non merci", "No thanks",
+                    "不用了")
                     onActive: tracker.answerConsent(false)
                 }
                 Bouton {
-                    libelle: consent.t("Oui, j'envoie mes parties", "Yes, share my games")
+                    libelle: consent.t("Oui, j'envoie mes parties", "Yes, share my games",
+                    "好的，分享我的对局")
                     primaire: true
                     onActive: tracker.answerConsent(true)
                 }

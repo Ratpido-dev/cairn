@@ -26,7 +26,7 @@ from .hs_setup import (
     find_prefixes,
     log_config_status,
 )
-from .paths import CARDS_JSON, CARDS_JSON_EN
+from .paths import CARDS_JSON, CARDS_JSON_EN, CARDS_JSON_ZH
 
 OK, WARN, BAD = "\033[32m✓\033[0m", "\033[33m!\033[0m", "\033[31m✗\033[0m"
 
@@ -131,9 +131,10 @@ def main(argv: list[str] | None = None) -> int:
             )
 
     # ---- base de cartes -----------------------------------------------------
-    for label, path, needed in (
-        ("base de cartes (FR)", CARDS_JSON, True),
-        ("noms anglais", CARDS_JSON_EN, False),
+    for label, path, needed, hint in (
+        ("base de cartes (FR)", CARDS_JSON, True, ""),
+        ("noms anglais", CARDS_JSON_EN, False, " enUS"),
+        ("noms chinois", CARDS_JSON_ZH, False, " zhCN"),
     ):
         if path.is_file():
             line(OK, label, f"{path.stat().st_size / 1048576:.1f} Mo")
@@ -141,8 +142,7 @@ def main(argv: list[str] | None = None) -> int:
             line(
                 BAD if needed else WARN,
                 label,
-                "absente — python tools/fetch_cards.py"
-                + ("" if needed else " enUS"),
+                "absente — python tools/fetch_cards.py" + hint,
             )
 
     # Le drapeau « pos » (haut/fond du deck) est calculé au téléchargement : une

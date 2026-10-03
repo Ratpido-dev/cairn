@@ -19,17 +19,29 @@ import urllib.request
 from .paths import (
     CARDS_JSON,
     CARDS_JSON_EN,
+    CARDS_JSON_ZH,
     CARDS_META,
     CARDS_TEXT,
     CARDS_TEXT_EN,
+    CARDS_TEXT_ZH,
 )
 
 URL = "https://api.hearthstonejson.com/v1/latest/{locale}/cards.json"
-TARGETS = {"frFR": CARDS_JSON, "enUS": CARDS_JSON_EN}
+# Locales « secondaires » : le fichier n'est qu'une table id → nom, la base
+# complète (mécaniques, races, pos, imbue) reste le frFR.
+TARGETS = {
+    "frFR": CARDS_JSON,
+    "enUS": CARDS_JSON_EN,
+    "zhCN": CARDS_JSON_ZH,
+}
 # Textes de règles, écrits à part : ils pèsent autant que toute la base élaguée
 # et ne servent qu'à l'infobulle de survol, donc on ne les charge qu'à la
 # demande (cf. CardsDb.text).
-TEXT_TARGETS = {"frFR": CARDS_TEXT, "enUS": CARDS_TEXT_EN}
+TEXT_TARGETS = {
+    "frFR": CARDS_TEXT,
+    "enUS": CARDS_TEXT_EN,
+    "zhCN": CARDS_TEXT_ZH,
+}
 
 # ---- cartes dont le CODE connaît l'effet -------------------------------------
 #
@@ -264,7 +276,7 @@ def slim(cards: list[dict], locale: str, with_bg: bool = False) -> list[dict]:
     """Réduit le JSON AVANT écriture : le fichier complet coûte ~58 Mo à parser
     au démarrage (35 000 dicts d'une trentaine de clés) pour une dizaine de
     champs réellement utilisés — cf. budget RAM du cahier des charges."""
-    if locale == "enUS":
+    if locale in ("enUS", "zhCN"):
         return [{"id": c["id"], "name": c["name"]} for c in cards if "id" in c]
     if not with_bg:
         cards = [c for c in cards if c.get("set") not in SKIPPED_SETS]
@@ -379,7 +391,7 @@ def main(argv: list[str] | None = None) -> int:
 
     args = [a for a in argv if not a.startswith("-")]
     arg = args[0] if args else "all"
-    for locale in (["frFR", "enUS"] if arg == "all" else [arg]):
+    for locale in (list(TARGETS) if arg == "all" else [arg]):
         fetch(locale, with_bg=with_bg)
     return 0
 
