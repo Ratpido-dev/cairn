@@ -1604,6 +1604,23 @@ class TrackerBridge(QObject):
         self._fill_deck_model()
         self.changed.emit()
 
+    @Property(bool, notify=changed)
+    def previewInPanel(self):
+        choix = self._config.preview_in_panel
+        if choix is not None:
+            return choix
+        # Seul KWin sait poser une fenêtre d'aperçu à côté de son panneau
+        # (règles cairn-*) ; ailleurs sous Wayland elle atterrit où le
+        # compositeur veut, et les mosaïques lui donnent le focus.
+        return bool(os.environ.get("WAYLAND_DISPLAY")) and \
+            "KDE" not in os.environ.get("XDG_CURRENT_DESKTOP", "").upper()
+
+    @Slot(bool)
+    def setPreviewInPanel(self, inside: bool) -> None:
+        self._config.preview_in_panel = bool(inside)
+        self._config.save()
+        self.changed.emit()
+
     def _fill_deck_model(self) -> None:
         lang = self._config.language
         hide = self._config.hide_drawn

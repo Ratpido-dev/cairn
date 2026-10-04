@@ -985,3 +985,52 @@ def test_verification_du_processus_desactivable(tmp_path, monkeypatch):
         assert not relance.hsRunning
     finally:
         relance.shutdown()
+
+
+def test_apercu_dans_le_panneau(tmp_path, monkeypatch):
+    """Sous Niri (et les autres mosaïques), chaque fenêtre d'aperçu prenait le
+    focus : le panneau perdait le survol, l'aperçu se fermait, et ça bouclait.
+    Avec l'option, l'aperçu est dessiné dans le panneau et sa fenêtre reste
+    cachée ; automatique sous Wayland hors KDE, forçable dans les deux sens."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    from PySide6.QtCore import QUrl
+    from PySide6.QtGui import QGuiApplication
+    from PySide6.QtQml import QQmlApplicationEngine
+    from PySide6.QtQuick import QQuickItem, QQuickWindow
+
+    from src.cairn.app import QML_DIR
+    from src.cairn.config import Config
+    from src.cairn.ui.bridge import TrackerBridge
+
+    QGuiApplication.instance() or QGuiApplication([])
+
+    monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-1")
+    monkeypatch.setenv("XDG_CURRENT_DESKTOP", "niri")
+    bridge = TrackerBridge()
+    try:
+        assert bridge.previewInPanel
+        monkeypatch.setenv("XDG_CURRENT_DESKTOP", "KDE")
+        assert not bridge.previewInPanel
+        bridge.setPreviewInPanel(True)
+        assert bridge.previewInPanel and Config.load().preview_in_panel is True
+
+        for nom in ("DeckPanel.qml", "OppPanel.qml", "SecretsPopup.qml", "OppHandDots.qml"):
+            engine = QQmlApplicationEngine()
+            engine.rootContext().setContextProperty("tracker", bridge)
+            engine.load(QUrl.fromLocalFile(str(QML_DIR / nom)))
+            fenetre = engine.rootObjects()[0]
+            fenetre.setProperty("hoverCard", "CS2_029")
+            fenetre_apercu = [e for e in fenetre.findChildren(QQuickWindow)
+                              if str(e.property("title") or "").startswith("Cairn · aperçu")]
+            dedans = [i for i in fenetre.findChildren(QQuickItem)
+                      if i.property("neededHeight") is not None]
+            assert dedans, f"{nom} : pas d'aperçu dans le panneau"
+            assert dedans[0].property("active"), nom
+            assert not any(a.property("visible") for a in fenetre_apercu), nom
+
+            bridge.setPreviewInPanel(False)
+            assert not dedans[0].property("active"), nom
+            bridge.setPreviewInPanel(True)
+            del engine
+    finally:
+        bridge.shutdown()

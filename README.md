@@ -64,7 +64,18 @@ compositor centers everything. Cairn installs KWin rules `cairn-pos-*` in *Remem
 mode, one per widget, and above all a `layer=overlay` rule — the only layer that draws
 **on top of an exclusive-fullscreen game**. On other desktops, the windows carry stable
 titles and the app_id `cairn`: enough to target them from GNOME Extensions, Hyprland,
-Sway or `wmctrl`.
+Sway or `wmctrl`. Card previews are then drawn **inside** the panel rather than in a
+window of their own: tiling compositors (Niri, Hyprland, Sway) focus every new window,
+and the preview kept closing in a loop. A launcher switch overrides the choice. On Niri,
+floating the widgets without stealing focus takes one rule in `config.kdl`:
+
+```kdl
+window-rule {
+    match app-id="^cairn$"
+    open-floating true
+    open-focused false
+}
+```
 
 ## Installation
 

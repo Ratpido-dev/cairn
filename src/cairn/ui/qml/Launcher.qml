@@ -67,6 +67,10 @@ Window {
                           "Turn off for native ports (hearthstone-linux-gui): without Hearthstone.exe, the game is never detected."],
         "hideDrawn": ["Masquer les cartes piochées (sinon grisées)",
                       "Hide drawn cards (otherwise dimmed)"],
+        "inlinePreview": ["Aperçu des cartes dans le panneau",
+                          "Card preview inside the panel"],
+        "inlinePreviewHint": ["Plutôt qu'une fenêtre à côté. À garder pour Niri, Hyprland, Sway : ils donnent le focus à chaque fenêtre et l'aperçu se fermait en boucle.",
+                              "Instead of a separate window. Keep it on for Niri, Hyprland, Sway: they focus every new window and the preview kept closing in a loop."],
         "handDotsHint": ["Tour d'arrivée, cadeau, vignette. À caler une fois sous son éventail : la position est retenue.",
                          "Arrival turn, gift, tile. Drag it once under their hand: the position is remembered."],
         "sizeDeck":  ["Taille — mon deck", "Size — my deck"],
@@ -914,6 +918,30 @@ Window {
                         NeonSwitch {
                             checked: tracker.hideDrawn
                             onToggled: tracker.setHideDrawn(checked)
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        ColumnLayout {
+                            spacing: 1
+                            Layout.fillWidth: true
+                            Text {
+                                text: home.tr("inlinePreview")
+                                color: home.thm.text
+                                font.pixelSize: 12
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: home.tr("inlinePreviewHint")
+                                color: home.thm.textDim
+                                font.pixelSize: 10
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+                        NeonSwitch {
+                            checked: tracker.previewInPanel
+                            onToggled: tracker.setPreviewInPanel(checked)
                         }
                     }
 

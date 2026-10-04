@@ -8,7 +8,8 @@ Window {
     readonly property real u: tracker.oppScale  // échelle réglée au launcher
     width: 260 * u
     // grandit avec le contenu jusqu'au bas de l'écran, ensuite on défile
-    height: Math.min((Screen.height - 120) / u, content.implicitHeight + 24) * u
+    height: Math.min((Screen.height - 120) / u,
+                     Math.max(content.implicitHeight + 24, apercu.neededHeight)) * u
     x: 24
     y: 80
     visible: tracker.hsRunning && tracker.inGame && tracker.hasGame
@@ -247,6 +248,15 @@ Window {
                 }
             }
         }
+
+        // aperçu dans le panneau (option) : à la place de la fenêtre d'aperçu
+        InlinePreview {
+            id: apercu
+            anchors.fill: parent
+            cardId: opp.hoverCard
+            note: opp.hoverNote
+            opponentSide: true
+        }
     }
 
     // ---- aperçu de carte au survol (à droite du panneau adversaire) -------
@@ -259,7 +269,7 @@ Window {
         // aperçus : ils portent WindowTransparentForInput, la souris les
         // traverse et on ne peut pas les attraper (issue #1).
         transientParent: opp
-        visible: opp.visible && opp.hoverCard !== ""
+        visible: opp.visible && opp.hoverCard !== "" && !tracker.previewInPanel
         title: "Cairn · aperçu adversaire"
         cardId: opp.hoverCard
         note: opp.hoverNote

@@ -48,12 +48,13 @@ FloatingWindow {
              && dots.count > 0
 
     width: innerW * u
-    height: innerH * u
+    // grandit sous le bandeau le temps d'un aperçu dans le panneau (option)
+    height: Math.max(innerH, apercu.neededHeight) * u
 
     Item {
         id: board
         width: hand.innerW
-        height: hand.innerH
+        height: hand.height / hand.u
         scale: hand.u
         transformOrigin: Item.TopLeft
 
@@ -61,7 +62,9 @@ FloatingWindow {
         // saisir entre deux pastilles
         Rectangle {
             id: handle
-            anchors.centerIn: parent
+            // calée en haut : le plateau s'allonge vers le bas pendant un aperçu
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 2
             width: Math.max(60, dots.count * (hand.dotW + hand.gap) + 14)
             height: hand.innerH - 4
             radius: 12
@@ -193,6 +196,15 @@ FloatingWindow {
                 }
             }
         }
+
+        // aperçu dans le panneau (option) : sous le bandeau, qui s'allonge
+        InlinePreview {
+            id: apercu
+            anchors.fill: parent
+            cardId: hand.hoverCard
+            note: hand.hoverNote
+            opponentSide: true
+        }
     }
 
     // ---- aperçu au survol, sous le bandeau --------------------------------
@@ -208,6 +220,7 @@ FloatingWindow {
         // traverse et on ne peut pas les attraper (issue #1).
         transientParent: hand
         visible: hand.visible && (hand.hoverCard !== "" || hand.hoverNote !== "")
+                 && !tracker.previewInPanel
         title: "Cairn · aperçu main"
         cardId: hand.hoverCard
         note: hand.hoverNote

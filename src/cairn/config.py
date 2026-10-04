@@ -37,6 +37,11 @@ class Config:
     # Carte dont le dernier exemplaire a quitté le deck : grisée et barrée
     # (False — la liste du deck reste complète) ou retirée de la liste (#4).
     hide_drawn: bool = False
+    # Aperçu de carte DANS le panneau plutôt que dans une fenêtre à côté.
+    # Les compositeurs en mosaïque (Niri, Hyprland, Sway) donnent le focus à
+    # chaque nouvelle fenêtre : le panneau perd le survol, l'aperçu se ferme,
+    # et ça boucle. None = automatique (dans le panneau sous Wayland hors KDE).
+    preview_in_panel: bool | None = None
     language: str = "fr"  # "fr" | "en"
     hs_prefix: str = ""  # force le prefix Wine/Proton si la détection se trompe
     # Vise directement un dossier Logs/, sans prefix : installations natives
@@ -141,6 +146,8 @@ class Config:
         cfg.my_hand = bool(data.get("my_hand", True))
         cfg.my_plays = bool(data.get("my_plays", True))
         cfg.hide_drawn = bool(data.get("hide_drawn", False))
+        dedans = data.get("preview_in_panel")
+        cfg.preview_in_panel = None if dedans is None else bool(dedans)
         cfg.language = "en" if data.get("language") == "en" else "fr"
         cfg.hs_prefix = str(data.get("hs_prefix") or "")
         cfg.hs_logs = str(data.get("hs_logs") or "")

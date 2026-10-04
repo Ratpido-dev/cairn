@@ -64,7 +64,19 @@ ignorées, le compositeur pose tout au centre. Cairn installe des règles KWin
 `cairn-pos-*` en mode *Remember*, une par widget, et surtout une règle `layer=overlay`
 — la seule couche qui passe **au-dessus d'un jeu en plein écran exclusif**. Sur les
 autres bureaux, les fenêtres portent des titres stables et l'app_id `cairn` : de quoi
-les cibler dans GNOME Extensions, Hyprland, Sway ou `wmctrl`.
+les cibler dans GNOME Extensions, Hyprland, Sway ou `wmctrl`. Les aperçus de cartes y sont
+alors dessinés **dans** le panneau plutôt que dans une fenêtre à part : les compositeurs
+en mosaïque (Niri, Hyprland, Sway) donnent le focus à chaque nouvelle fenêtre, et
+l'aperçu se fermait en boucle. Un interrupteur du launcher force l'un ou l'autre. Sous
+Niri, une règle dans `config.kdl` fait flotter les widgets sans voler le focus :
+
+```kdl
+window-rule {
+    match app-id="^cairn$"
+    open-floating true
+    open-focused false
+}
+```
 
 ## Installation
 

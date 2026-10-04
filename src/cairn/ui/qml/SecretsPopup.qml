@@ -27,11 +27,11 @@ FloatingWindow {
              && tracker.oppSecretCount > 0 && list.count > 0
 
     width: innerW * u
-    height: (header.height + body.height + 16) * u
+    height: Math.max(header.height + body.height + 16, apercu.neededHeight) * u
 
     Rectangle {
         width: pop.innerW
-        height: header.height + body.height + 16
+        height: pop.height / pop.u
         scale: pop.u
         transformOrigin: Item.TopLeft
         radius: 8
@@ -89,6 +89,15 @@ FloatingWindow {
                 }
             }
         }
+
+        // aperçu dans le panneau (option) : à la place de la fenêtre d'aperçu
+        InlinePreview {
+            id: apercu
+            anchors.fill: parent
+            cardId: pop.hoverCard
+            note: ""
+            opponentSide: true
+        }
     }
 
     // ---- aperçu au survol : le rendu officiel de la carte ------------------
@@ -101,7 +110,7 @@ FloatingWindow {
         // aperçus : ils portent WindowTransparentForInput, la souris les
         // traverse et on ne peut pas les attraper (issue #1).
         transientParent: pop
-        visible: pop.visible && pop.hoverCard !== ""
+        visible: pop.visible && pop.hoverCard !== "" && !tracker.previewInPanel
         title: "Cairn · aperçu secret"
         cardId: pop.hoverCard
         opponentSide: true
