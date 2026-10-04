@@ -165,7 +165,7 @@ Item {
         border.color: "#262b38"
         Text {
             anchors.centerIn: parent
-            text: (tracker.language === "en" ? "next draw: " : "prochaine pioche : ")
+            text: (["prochaine pioche : ", "next draw: ", "下一抽："][tracker.langIndex])
                   + preview.draw
             color: "#8b93a7"
             font.pixelSize: 10
@@ -193,7 +193,7 @@ Item {
             spacing: 3
 
             Text {
-                text: (tracker.language === "en" ? "CAN RESURRECT — " : "PEUT RESSUSCITER — ")
+                text: (["PEUT RESSUSCITER — ", "CAN RESURRECT — ", "可以复活 — "][tracker.langIndex])
                       + preview.pool.label
                 color: "#e08a2e"
                 font.pixelSize: 9

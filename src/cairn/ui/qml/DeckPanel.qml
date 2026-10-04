@@ -184,10 +184,11 @@ Window {
                     Text {
                         id: countText
                         anchors.centerIn: parent
-                        readonly property bool en: tracker.language === "en"
                         text: tracker.result === "WON" ? "GG"
-                            : tracker.result === "LOST" ? (en ? "loss" : "défaite")
-                            : tracker.remainingTotal + (en ? " left" : " au deck")
+                            : tracker.result === "LOST"
+                              ? ["défaite", "loss", "负"][tracker.langIndex]
+                            : tracker.remainingTotal
+                              + [" au deck", " left", " 张在牌库"][tracker.langIndex]
                         color: tracker.result === "" ? root.text : "#10131a"
                         font.pixelSize: 11
                         font.bold: tracker.result !== ""
@@ -233,7 +234,7 @@ Window {
                             opacity: 0.8
                         }
                         Text {
-                            text: (tracker.language === "en" ? "IN DECK (" : "EN DECK (")
+                            text: (["EN DECK (", "IN DECK (", "牌库中 ("][tracker.langIndex])
                                   + tracker.remainingTotal + ")"
                             color: root.muted
                             font.pixelSize: 10
@@ -287,7 +288,7 @@ Window {
                     // Protection d'Amara, Atlas, pouvoir héroïque amélioré…
                     // Sinon on découvre l'effet au moment où on le subit.
                     CardList {
-                        title: tracker.language === "en" ? "EFFECTS IN PLAY" : "EFFETS EN JEU"
+                        title: ["EFFETS EN JEU", "EFFECTS IN PLAY", "场上效果"][tracker.langIndex]
                         model: tracker.myEffectsModel
                         tint: root.accent
                         maxRows: 5
@@ -303,8 +304,7 @@ Window {
                     // permanence : quand la carte tombe, il est trop tard pour
                     // choisir autrement ses cartes à (1).
                     CardList {
-                        title: tracker.language === "en" ? "MY 1-COST PLAYED"
-                                                         : "MES CARTES À (1) JOUÉES"
+                        title: ["MES CARTES À (1) JOUÉES", "MY 1-COST PLAYED", "我的 1 费牌"][tracker.langIndex]
                         model: tracker.myReplayModel
                         tint: "#c9a227"
                         maxRows: 8
@@ -314,7 +314,7 @@ Window {
                     // Bouts du deck connus : HS masque l'ordre du deck, mais on
                     // sait où un effet a posé sa carte tant que rien n'a mélangé.
                     EntryList {
-                        title: tracker.language === "en" ? "TOP OF DECK" : "HAUT DU DECK"
+                        title: ["HAUT DU DECK", "TOP OF DECK", "牌库顶"][tracker.langIndex]
                         glyph: "▲"
                         model: tracker.deckTopModel
                         tint: "#5fb573"
@@ -324,7 +324,7 @@ Window {
                     }
 
                     EntryList {
-                        title: tracker.language === "en" ? "BOTTOM OF DECK" : "FOND DU DECK"
+                        title: ["FOND DU DECK", "BOTTOM OF DECK", "牌库底"][tracker.langIndex]
                         glyph: "▼"
                         model: tracker.deckBottomModel
                         tint: "#6bb6ff"
@@ -337,7 +337,7 @@ Window {
                     // Firestone met en avant, et qui manquait à Cairn
                     CardList {
                         visible: tracker.myHandEnabled
-                        title: tracker.language === "en" ? "IN HAND" : "EN MAIN"
+                        title: ["EN MAIN", "IN HAND", "手牌"][tracker.langIndex]
                         model: tracker.myHandModel
                         tint: "#5fb573"
                         maxRows: 10
@@ -352,8 +352,7 @@ Window {
                     // passé.
                     CardList {
                         visible: tracker.myPlaysEnabled
-                        title: tracker.language === "en" ? "CARDS I PLAYED"
-                                                         : "MES CARTES JOUÉES"
+                        title: ["MES CARTES JOUÉES", "CARDS I PLAYED", "我出过的牌"][tracker.langIndex]
                         model: tracker.myPlaysModel
                         tint: "#5fb573"
                         maxRows: 14
@@ -371,7 +370,7 @@ Window {
 
                     // file de MON atlas (Azalina peut avoir copié le Godfrey adverse)
                     CardList {
-                        title: tracker.language === "en" ? "MY GODFREY ATLAS" : "MON ATLAS DE GODFREY"
+                        title: ["MON ATLAS DE GODFREY", "MY GODFREY ATLAS", "我的高弗雷图册"][tracker.langIndex]
                         model: tracker.myAtlasModel
                         tint: "#c9a227"
                         maxRows: 8
@@ -380,7 +379,7 @@ Window {
                     }
 
                     CardList {
-                        title: tracker.language === "en" ? "MY GRAVEYARD" : "MON CIMETIÈRE"
+                        title: ["MON CIMETIÈRE", "MY GRAVEYARD", "我的墓地"][tracker.langIndex]
                         model: tracker.myGraveyardModel
                         tint: root.muted
                         maxRows: 5

@@ -110,14 +110,12 @@ FloatingWindow {
                         : (model.creatorId !== undefined ? model.creatorId : "")
                     readonly property string note: {
                         var quand = model.badge === "M"
-                            ? (tracker.language === "en" ? "kept at mulligan"
-                                                         : "gardée au mulligan")
+                            ? (["gardée au mulligan", "kept at mulligan", "起手保留"][tracker.langIndex])
                             : (model.badge === "" ? ""
-                               : (tracker.language === "en" ? "arrived turn "
-                                                            : "arrivée au tour ")
+                               : (["arrivée au tour ", "arrived turn ", "到达回合 "][tracker.langIndex])
                                  + model.badge)
                         var qui = model.origin !== ""
-                            ? (tracker.language === "en" ? "created by " : "créée par ")
+                            ? (["créée par ", "created by ", "衍生自 "][tracker.langIndex])
                               + model.origin
                             : ""
                         return [quand, qui].filter(function (s) { return s !== "" })

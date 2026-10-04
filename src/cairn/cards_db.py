@@ -1,7 +1,12 @@
-"""Base de cartes HearthstoneJSON (locale frFR), indexée par dbfId et par cardId.
+"""Base de cartes HearthstoneJSON, indexée par dbfId et par cardId.
 
-Le JSON est téléchargé par ``tools/fetch_cards.py`` et mis en cache dans
-``data/cards/``. Ce module ne fait aucune requête réseau.
+La base principale est le **frFR** : c'est la seule qui porte les mécaniques,
+races, `pos` et `imbue` dont le moteur a besoin. Les autres langues (en, zh)
+n'ajoutent qu'une table ``id → nom`` et un fichier de textes de règles,
+chargés à la demande — cf. ``localized_name`` et ``text``.
+
+Le JSON est téléchargé par ``cairn-cards`` (cf. ``cards_fetch``) et mis en
+cache dans ``data/cards/``. Ce module ne fait aucune requête réseau.
 """
 
 from __future__ import annotations
@@ -9,7 +14,30 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .paths import CARDS_JSON, CARDS_JSON_EN, CARDS_TEXT, CARDS_TEXT_EN
+from .paths import (
+    CARDS_JSON,
+    CARDS_JSON_EN,
+    CARDS_JSON_ZH,
+    CARDS_TEXT,
+    CARDS_TEXT_EN,
+    CARDS_TEXT_ZH,
+)
+
+# Locales secondaires : une simple table id → nom, chargée à la première
+# demande. La base principale (frFR) reste celle qui porte les mécaniques.
+#
+# Les chemins sont résolus à CHAQUE appel, pas figés à l'import : c'est ce que
+# fait déjà le reste du projet (cards_fetch, app…), et ça permet aux tests de
+# remplacer les constantes par monkeypatch — cf. tests/test_card_text.py, qui
+# vérifie le repli du texte anglais sur le français.
+def _names_path(lang: str):
+    """Fichier id → nom d'une langue secondaire, ou None si la base frFR suffit."""
+    return {"en": CARDS_JSON_EN, "zh": CARDS_JSON_ZH}.get(lang)
+
+
+def _text_path(lang: str):
+    """Fichier des textes de règles d'une langue."""
+    return {"fr": CARDS_TEXT, "en": CARDS_TEXT_EN, "zh": CARDS_TEXT_ZH}.get(lang)
 
 
 # Seuls champs utilisés par le tracker — le JSON complet en contient des
@@ -55,29 +83,33 @@ class CardsDb:
             c["id"] for c in cards if c.get("imbue") and "id" in c
         }
 
-        self._en_names: dict[str, str] | None = None
+        # noms des locales secondaires (en, zh), par langue — à la demande
+        self._names: dict[str, dict[str, str]] = {}
         # textes de règles, par langue — chargés au premier survol seulement
         self._texts: dict[str, dict[str, str]] = {}
 
     def localized_name(self, card_id: str | None, lang: str = "fr") -> str:
         """Nom de carte dans la langue voulue.
 
-        L'anglais vient d'un fichier séparé (id → name, 1,8 Mo) chargé à la
-        première demande : inutile de doubler la base complète en mémoire.
+        Les langues autres que le frFR viennent d'un fichier séparé
+        (id → name, ~1,8 Mo) chargé à la première demande : inutile de doubler
+        la base complète en mémoire. Retombe sur le nom français si la locale
+        n'a pas de table, ou si la carte n'y figure pas.
         """
         card = self.by_card_id.get(card_id or "")
         fr = card.get("name", card_id or "?") if card else (card_id or "?")
-        if lang != "en":
+        chemin = _names_path(lang)
+        if chemin is None:
             return fr
-        if self._en_names is None:
+        table = self._names.get(lang)
+        if table is None:
             try:
-                with open(CARDS_JSON_EN, encoding="utf-8") as f:
-                    self._en_names = {
-                        c["id"]: c["name"] for c in json.load(f) if "id" in c
-                    }
+                with open(chemin, encoding="utf-8") as f:
+                    table = {c["id"]: c["name"] for c in json.load(f) if "id" in c}
             except (OSError, json.JSONDecodeError):
-                self._en_names = {}
-        return self._en_names.get(card_id or "", fr)
+                table = {}
+            self._names[lang] = table
+        return table.get(card_id or "", fr)
 
     def text(self, card_id: str | None, lang: str = "fr") -> str:
         """Texte de règles d'une carte — vide si la base n'en a pas.
@@ -86,26 +118,25 @@ class CardsDb:
         (Protection d'Amara, Âme brisée…) n'a AUCUN rendu de carte à afficher,
         seulement un nom — sans son texte, l'effet reste une devinette.
 
-        Fichier séparé chargé à la première demande, comme les noms anglais :
-        les textes pèsent autant que toute la base élaguée, et une partie sur
-        deux se joue sans jamais survoler un effet.
+        Fichier séparé chargé à la première demande, comme les noms : les
+        textes pèsent autant que toute la base élaguée, et une partie sur deux
+        se joue sans jamais survoler un effet.
         """
         if not card_id:
             return ""
-        cle = "en" if lang == "en" else "fr"
+        cle = lang if _text_path(lang) else "fr"
         table = self._texts.get(cle)
         if table is None:
-            chemin = CARDS_TEXT_EN if cle == "en" else CARDS_TEXT
             try:
-                with open(chemin, encoding="utf-8") as f:
+                with open(_text_path(cle), encoding="utf-8") as f:
                     table = json.load(f)
             except (OSError, json.JSONDecodeError):
                 table = {}
             self._texts[cle] = table
         texte = table.get(card_id, "")
-        # base antérieure aux textes, ou carte sans texte en anglais : le
-        # français vaut mieux que rien
-        if not texte and cle == "en":
+        # base antérieure aux textes, ou carte sans texte dans cette langue :
+        # le français vaut mieux que rien
+        if not texte and cle != "fr":
             texte = self.text(card_id, "fr")
         return texte
 

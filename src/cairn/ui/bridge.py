@@ -45,11 +45,14 @@ from ..hs_setup import (
     log_config_status,
 )
 from ..i18n import (
+    LANGS,
     addon_desc,
     addon_icon,
     class_name,
     counter_label,
+    lang_index,
     league_name,
+    locale_of,
     row_label,
     t as t_,
 )
@@ -98,7 +101,7 @@ def _fmt_forme(manches: int, secondes: int, lang: str) -> str:
     """
     if not manches and not secondes:
         return ""
-    mot = "turns" if lang == "en" else "manches"
+    mot = {"fr": "manches", "en": "turns", "zh": "回合"}.get(lang, "manches")
     bouts = []
     if manches:
         bouts.append(f"{manches} {mot}")
@@ -631,7 +634,7 @@ class TrackerBridge(QObject):
         # gardé pour le bouton « copier le deckcode » : la vue ne retient que
         # le nom du deck, pas la chaîne d'origine
         self._deckstring = deck.deckstring if deck else ""
-        view = compute_deck_view(game, deck, self._db)
+        view = compute_deck_view(game, deck, self._db, self._config.language)
         if view == self._view:
             return
         self._view = view
@@ -683,7 +686,8 @@ class TrackerBridge(QObject):
             ]
 
         self._opp_hand_model.replace(_with_origin(view.opponent_hand))
-        hidden = "? hidden card" if lang == "en" else "? carte cachée"
+        hidden = {"fr": "? carte cachée", "en": "? hidden card",
+                  "zh": "? 未知牌"}.get(lang, "? carte cachée")
         self._opp_hand_slots_model.replace(
             [
                 {
@@ -757,7 +761,8 @@ class TrackerBridge(QObject):
         self._opp_grave_model.replace(_cards(view.opp_graveyard))
 
         def _atlas(cards):
-            hidden = "? hidden card" if lang == "en" else "? carte cachée"
+            hidden = {"fr": "? carte cachée", "en": "? hidden card",
+                      "zh": "? 未知牌"}.get(lang, "? carte cachée")
             return [
                 {
                     "label": self._db.localized_name(c.card_id, lang) if c.known else hidden,
@@ -1300,8 +1305,8 @@ class TrackerBridge(QObject):
 
     @Slot(str)
     def setLanguage(self, lang: str) -> None:
-        """Bascule FR/EN : libellés, noms de cartes et aperçus HearthstoneJSON."""
-        self._config.language = "en" if lang == "en" else "fr"
+        """Bascule fr/en/zh : libellés, noms de cartes et aperçus HearthstoneJSON."""
+        self._config.language = lang if lang in LANGS else "fr"
         self._config.save()
         self._view = DeckView()  # force le recalcul des modèles au prochain poll
         self._refresh_addons_model()
@@ -1311,10 +1316,22 @@ class TrackerBridge(QObject):
     def language(self):
         return self._config.language
 
+    @Property(int, notify=changed)
+    def langIndex(self):
+        """Position de la langue dans ``i18n.LANGS`` (0 = fr, 1 = en, 2 = zh).
+
+        C'est ce que le QML indexe :
+        ``["Tour ", "Turn ", "第 "][tracker.langIndex]``.
+        Une PROPRIÉTÉ et non un appel de méthode : QML ne suit pas les
+        dépendances à l'intérieur d'une méthode, donc l'interface ne se
+        retraduirait pas au changement de langue.
+        """
+        return lang_index(self._config.language)
+
     @Property(str, notify=changed)
     def cardLocale(self):
         """Locale des rendus de cartes HearthstoneJSON."""
-        return "enUS" if self._config.language == "en" else "frFR"
+        return locale_of(self._config.language)
 
     # ---- partage volontaire de parties -------------------------------------
 
@@ -1349,16 +1366,19 @@ class TrackerBridge(QObject):
         n, octets = sharing.taille_outbox()
         if n == 0:
             return ""
-        en = self._config.language == "en"
+        lang = self._config.language
         mo = octets / 1048576
-        if en:
+        if lang == "zh":
+            return f"{n} 场对局待上传 · {mo:.1f} MB"
+        if lang == "en":
             return f"{n} session{'s' if n > 1 else ''} ready · {mo:.1f} MB"
         return f"{n} session{'s' if n > 1 else ''} en attente · {mo:.1f} Mo"
 
     @Property("QStringList", constant=True)
     def rankLeagues(self):
         """Paliers traduits, précédés d'un « — » qui vaut « non renseigné »."""
-        vide = "— non renseigné —" if self._config.language != "en" else "— not set —"
+        vide = {"fr": "— non renseigné —", "en": "— not set —",
+                "zh": "— 未设置 —"}.get(self._config.language, "— non renseigné —")
         return [vide] + [league_name(k, self._config.language) for k in LEAGUES]
 
     @Property(int, notify=changed)
@@ -1497,6 +1517,8 @@ class TrackerBridge(QObject):
         if not sessions:
             return ""
         mo = sum(s.size for s in sessions) / 1048576
+        if self._config.language == "zh":
+            return f"{len(sessions)} 场对局 · {mo:.1f} MB"
         if self._config.language == "en":
             unite = "session" if len(sessions) == 1 else "sessions"
             return f"{len(sessions)} {unite} · {mo:.1f} MB"
@@ -1896,12 +1918,14 @@ class TrackerBridge(QObject):
     def deckName(self):
         if self._view.deck_name:
             return self._view.deck_name
-        en = self._config.language == "en"
+        lang = self._config.language
         if self.hasGame:
             # Partie en cours dont le deck est indéterminable (partie amicale) :
             # le dire, plutôt que laisser croire à une attente de partie.
-            return "Unknown deck" if en else "Deck inconnu"
-        return "Waiting for a game…" if en else "En attente de partie…"
+            return {"fr": "Deck inconnu", "en": "Unknown deck",
+                    "zh": "未知套牌"}.get(lang, "Deck inconnu")
+        return {"fr": "En attente de partie…", "en": "Waiting for a game…",
+                "zh": "等待对局开始…"}.get(lang, "En attente de partie…")
 
     @Property(str, notify=changed)
     def opponentName(self):
@@ -2062,6 +2086,8 @@ class TrackerBridge(QObject):
         if games == 0:
             return ""
         pct = round(100 * wins / games)
+        if self._config.language == "zh":
+            return f"{games} 场 · {wins} 胜 – {games - wins} 负 · {pct} %"
         if self._config.language == "en":
             unit = "game" if games == 1 else "games"
             return f"{games} {unit} · {wins}W – {games - wins}L · {pct} %"
@@ -2118,5 +2144,6 @@ class TrackerBridge(QObject):
         if wins == losses == 0:
             return ""
         klass = class_name(self._opp_class, self._config.language)
-        joiner = "vs" if self._config.language == "en" else "contre"
+        joiner = {"fr": "contre", "en": "vs", "zh": "对阵"}.get(
+            self._config.language, "contre")
         return f"{wins}-{losses} {joiner} {klass}"
