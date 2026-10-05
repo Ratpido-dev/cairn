@@ -1034,3 +1034,46 @@ def test_apercu_dans_le_panneau(tmp_path, monkeypatch):
             del engine
     finally:
         bridge.shutdown()
+
+
+def test_popup_des_secrets_limite_a_dix_lignes():
+    """En Wild, une classe peut avoir plus de quinze secrets possibles : le
+    popup s'arrête à dix lignes et fait défiler le reste, au lieu de
+    descendre jusqu'au bas de l'écran."""
+    from PySide6.QtCore import QUrl
+    from PySide6.QtGui import QGuiApplication
+    from PySide6.QtQml import QQmlApplicationEngine
+    from PySide6.QtQuick import QQuickItem, QQuickWindow  # noqa: F401
+
+    from src.cairn.app import QML_DIR
+    from src.cairn.ui.bridge import TrackerBridge
+
+    QGuiApplication.instance() or QGuiApplication([])
+    bridge = TrackerBridge()
+    try:
+        engine = QQmlApplicationEngine()
+        engine.rootContext().setContextProperty("tracker", bridge)
+        engine.load(QUrl.fromLocalFile(str(QML_DIR / "SecretsPopup.qml")))
+        pop = engine.rootObjects()[0]
+        liste = next(i for i in pop.findChildren(QQuickItem)
+                     if i.property("model") is bridge.secretsModel)
+
+        def secrets(n):
+            bridge.secretsModel.replace([
+                {"label": f"Secret {i}", "cost": 2, "cardId": "", "ruledOut": False,
+                 "auto": False}
+                for i in range(n)
+            ])
+            # pas de processEvents : les liaisons suivent seules, et la boucle
+            # réveillerait les fenêtres laissées par les tests précédents
+            return liste.property("height"), pop.property("height")
+
+        h3, fen3 = secrets(3)
+        assert not liste.property("interactive")   # le popup reste déplaçable
+        h10, fen10 = secrets(10)
+        h16, fen16 = secrets(16)
+        assert h3 < h10 == h16 and fen10 == fen16
+        assert liste.property("interactive")       # le reste défile
+        del engine
+    finally:
+        bridge.shutdown()

@@ -22,12 +22,16 @@ FloatingWindow {
     property string hoverCard: ""
 
     readonly property int innerW: 210
+    // En Wild, une classe peut avoir plus de quinze secrets possibles : au-delà
+    // de dix lignes on fait défiler plutôt que de laisser le popup descendre
+    // jusqu'au bas de l'écran.
+    readonly property int maxRows: 10
     // pas de secret en jeu, pas de fenêtre : elle n'a rien à dire 95 % du temps
     visible: tracker.hsRunning && tracker.inGame
              && tracker.oppSecretCount > 0 && list.count > 0
 
     width: innerW * u
-    height: Math.max(header.height + body.height + 16, apercu.neededHeight) * u
+    height: Math.max(header.height + list.height + 16, apercu.neededHeight) * u
 
     Rectangle {
         width: pop.innerW
@@ -60,33 +64,36 @@ FloatingWindow {
             elide: Text.ElideRight
         }
 
-        Column {
-            id: body
+        ListView {
+            id: list
             x: 6
             y: header.y + header.height + 5
             width: parent.width - 12
+            // 24 px par ligne + 2 d'espacement, sans espacement après la dernière
+            height: Math.max(0, Math.min(count, pop.maxRows) * 26 - 2)
             spacing: 2
-
-            Repeater {
-                id: list
-                model: tracker.secretsModel
-                delegate: CardRow {
-                    width: body.width
-                    implicitHeight: 24
-                    cardId: model.cardId
-                    label: model.label
-                    cost: model.cost
-                    // écarté : éteint ET barré, qu'il l'ait été à la main ou
-                    // par déduction — dans les deux cas il reste visible
-                    spent: model.ruledOut
-                    struck: model.ruledOut
-                    base: "#171a23"
-                    accent: "#4da6ff"
-                    showCount: false
-                    clickable: true
-                    onHoveredChanged: (inside) => pop.hoverCard = inside ? model.cardId : ""
-                    onClicked: tracker.toggleSecretRuledOut(model.cardId)
-                }
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            // sous dix lignes, la liste ne capte pas le glisser : le popup
+            // reste déplaçable en l'attrapant n'importe où
+            interactive: count > pop.maxRows
+            model: tracker.secretsModel
+            delegate: CardRow {
+                width: list.width
+                implicitHeight: 24
+                cardId: model.cardId
+                label: model.label
+                cost: model.cost
+                // écarté : éteint ET barré, qu'il l'ait été à la main ou
+                // par déduction — dans les deux cas il reste visible
+                spent: model.ruledOut
+                struck: model.ruledOut
+                base: "#171a23"
+                accent: "#4da6ff"
+                showCount: false
+                clickable: true
+                onHoveredChanged: (inside) => pop.hoverCard = inside ? model.cardId : ""
+                onClicked: tracker.toggleSecretRuledOut(model.cardId)
             }
         }
 
