@@ -880,7 +880,10 @@ def test_les_apercus_sont_rattaches_a_leur_panneau():
                        if str(e.property("title") or "").startswith("Cairn · aperçu")]
             assert apercus, f"aucun aperçu trouvé dans {nom}"
             for a in apercus:
-                assert a.transientParent() is fenetre, \
+                # Par la propriété QML, pas par QWindow.transientParent() :
+                # sous PySide6 6.12, l'objet que rend cet appel faisait planter
+                # le ramasse-miettes un test plus loin (segfault en CI).
+                assert a.property("transientParent") is fenetre, \
                     f"{nom} : l'aperçu n'est pas rattaché à son panneau"
             del engine
     finally:
