@@ -38,7 +38,9 @@ from ..deck_view import (CLASS_FR, DeckView, compute_deck_view, identifier_deck,
 from ..game_state import learn_own_account, round_number
 from ..history import History
 from ..hs_setup import (
+    classify_game_path,
     client_config_ok,
+    detect_logs_root,
     detect_prefix,
     ensure_client_config,
     ensure_log_config,
@@ -368,6 +370,9 @@ class TrackerBridge(QObject):
             return ""  # mode replay : rien à configurer
         prefix = self._prefix()
         if prefix is None:
+            # Journaux visés seuls (portage natif) : rien à configurer, on lit
+            if detect_logs_root(self._config.hs_logs or None) is not None:
+                return ""
             return "no_prefix"
         if log_config_status(prefix).state != "ok":
             return "logs_off"
@@ -484,15 +489,35 @@ class TrackerBridge(QObject):
         self.changed.emit()
         return "" if ok else message
 
-    @Slot(str)
-    def setPrefix(self, path: str):
-        """Force le prefix quand la détection se trompe, et se rebranche dessus."""
-        self._config.hs_prefix = path.strip()
+    @Property(str, notify=changed)
+    def hsGamePath(self):
+        """Dossier du jeu forcé à la main ("" : détection automatique)."""
+        return self._config.hs_logs or self._config.hs_prefix
+
+    @Slot(str, result=bool)
+    def setGamePath(self, path: str) -> bool:
+        """Force l'emplacement du jeu depuis le launcher, et se rebranche dessus.
+
+        Un prefix (dossier qui contient « drive_c ») ou un dossier ``Logs/`` :
+        on devine lequel, cf. ``classify_game_path``. Vide = retour à la
+        détection. ``False`` si le dossier ne mène pas au jeu — la config
+        n'est alors pas touchée.
+        """
+        prefix, logs = "", ""
+        if path.strip():
+            trouve = classify_game_path(path.strip())
+            if trouve is None:
+                return False
+            kind, chemin = trouve
+            prefix, logs = (str(chemin), "") if kind == "prefix" else ("", str(chemin))
+        self._config.hs_prefix = prefix
+        self._config.hs_logs = logs
         self._config.save()
         self._tracker = self._build_tracker()
         self._recorded.clear()
         self._session_game_base = 0
         self.changed.emit()
+        return True
 
     # ---- boucle ------------------------------------------------------------
 

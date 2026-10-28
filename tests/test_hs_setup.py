@@ -10,6 +10,7 @@ from src.cairn import hs_setup
 from src.cairn.hs_setup import (
     LOGS_ENV,
     PREFIX_ENV,
+    classify_game_path,
     detect_logs_root,
     detect_prefix,
     ensure_log_config,
@@ -337,3 +338,22 @@ def test_ni_logs_ni_prefix_rend_none(tmp_path, monkeypatch):
     monkeypatch.delenv(PREFIX_ENV, raising=False)
     monkeypatch.setattr(hs_setup, "iter_candidate_prefixes", lambda: iter(()))
     assert detect_logs_root() is None
+
+
+def test_champ_du_launcher_reconnait_prefix_et_dossier_logs(tmp_path):
+    """#10 : un « export CAIRN_HS_PREFIX=… » tapé au terminal n'atteint pas
+    Cairn lancé depuis le menu. Le champ du launcher le remplace, et range
+    tout seul ce qu'on y colle — sans qu'on sache lequel des deux est attendu."""
+    prefix = make_prefix(tmp_path)
+    jeu = prefix / hs_setup.HS_SUBPATH
+    # le prefix, ou n'importe quel dossier À L'INTÉRIEUR : on remonte au prefix
+    for colle in (prefix, jeu, jeu / "Logs"):
+        assert classify_game_path(colle) == ("prefix", prefix)
+
+    logs = make_logs(tmp_path)
+    assert classify_game_path(logs) == ("logs", logs)
+    assert classify_game_path(logs.parent) == ("logs", logs)
+
+    assert classify_game_path(tmp_path / "nexiste_pas") is None
+    (tmp_path / "vide").mkdir()
+    assert classify_game_path(tmp_path / "vide") is None

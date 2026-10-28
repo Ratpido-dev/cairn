@@ -212,6 +212,31 @@ def _as_logs_root(candidate: str | Path) -> Path | None:
     return None
 
 
+def classify_game_path(candidate: str | Path) -> tuple[str, Path] | None:
+    """Range un dossier collé dans le launcher : ``("prefix", p)``,
+    ``("logs", p)`` ou ``None`` s'il ne mène pas au jeu.
+
+    Le champ du launcher remplace ``export CAIRN_HS_PREFIX=…`` / ``CAIRN_HS_LOGS``,
+    qui ne servent à rien quand Cairn part du menu des applications : un
+    ``export`` ne vit que dans le terminal qui l'a tapé (#10). On n'y demande
+    donc pas de savoir lequel des deux on attend.
+
+    Un prefix est préféré dès qu'on le trouve, en remontant les parents :
+    coller le dossier du jeu ou son ``Logs/`` à l'intérieur d'un prefix doit
+    donner le prefix, sans quoi Cairn ne pourrait plus écrire le log.config.
+    """
+    path = Path(candidate).expanduser()
+    for parent in (path, *path.parents):
+        if has_hearthstone(parent):
+            return ("prefix", parent)
+    root = _as_logs_root(path)
+    if root is not None and (root.name == "Logs"
+                             or any(root.glob("Hearthstone_*"))
+                             or (root / "Power.log").is_file()):
+        return ("logs", root)
+    return None
+
+
 def detect_logs_root(
     logs_override: str | Path | None = None,
     prefix_override: str | Path | None = None,

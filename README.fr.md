@@ -103,10 +103,16 @@ cairn-cards --check     # la base de cartes est-elle à jour ?
 ```
 
 Le prefix Wine/Proton est **détecté** (Lutris, Steam/Proton, Heroic, Bottles,
-PlayOnLinux, wine nu). En cas de doute : `export CAIRN_HS_PREFIX=/chemin/vers/le/prefix`.
-Hearthstone tourne sans Wine ? Vise directement les journaux du jeu :
-`export CAIRN_HS_LOGS=/chemin/vers/Logs`. Cairn se contente alors de les lire —
+PlayOnLinux, wine nu). Si la détection se trompe, colle le dossier du jeu dans le
+champ « Dossier du jeu » du launcher : le prefix (le dossier qui contient `drive_c`),
+ou directement le dossier `Logs` pour une version native. Cairn devine lequel des
+deux, et le retient. Dans une version native, Cairn se contente de lire les journaux —
 il ne peut pas écrire le `log.config` du jeu, qui vit dans le prefix.
+
+Les variables `CAIRN_HS_PREFIX` et `CAIRN_HS_LOGS` marchent toujours, mais un
+`export` ne vaut que pour le terminal où on le tape : il faut lancer `cairn` depuis
+ce même terminal, ou écrire la ligne dans `~/.config/environment.d/cairn.conf`
+(`CAIRN_HS_PREFIX=/chemin/vers/le/prefix`, sans `export`) puis rouvrir la session.
 Les versions natives n'ont pas de `Hearthstone.exe` à détecter : coupe aussi
 « Vérifier que Hearthstone est lancé » dans le launcher.
 

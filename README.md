@@ -102,10 +102,16 @@ cairn-cards --check     # is the card database up to date?
 ```
 
 The Wine/Proton prefix is **detected** (Lutris, Steam/Proton, Heroic, Bottles,
-PlayOnLinux, plain wine). If in doubt: `export CAIRN_HS_PREFIX=/path/to/the/prefix`.
-Running Hearthstone without Wine? Point Cairn straight at the game's logs
-instead: `export CAIRN_HS_LOGS=/path/to/Logs`. Cairn then only reads them — it
-cannot write Hearthstone's `log.config` for you, since that lives in the prefix.
+PlayOnLinux, plain wine). If detection gets it wrong, paste the game's location into
+the launcher's "Game folder" field: the prefix (the folder that contains `drive_c`),
+or straight the `Logs` folder for a native port. Cairn works out which one it is and
+remembers it. With a native port, Cairn only reads the logs — it cannot write
+Hearthstone's `log.config` for you, since that lives in the prefix.
+
+The `CAIRN_HS_PREFIX` and `CAIRN_HS_LOGS` variables still work, but an `export` only
+lasts for the terminal you type it in: start `cairn` from that same terminal, or put
+the line in `~/.config/environment.d/cairn.conf` (`CAIRN_HS_PREFIX=/path/to/the/prefix`,
+no `export`) and log in again.
 Native ports have no `Hearthstone.exe` to detect, so also turn off "Check that
 Hearthstone is running" in the launcher.
 

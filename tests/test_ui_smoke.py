@@ -987,6 +987,39 @@ def test_verification_du_processus_desactivable(tmp_path, monkeypatch):
         relance.shutdown()
 
 
+def test_dossier_du_jeu_colle_dans_le_launcher(tmp_path, monkeypatch):
+    """#10 : le champ du launcher remplace CAIRN_HS_PREFIX / CAIRN_HS_LOGS. Un
+    dossier sans jeu est refusé sans toucher à la config ; un dossier Logs seul
+    (portage natif) éteint l'alerte « Hearthstone introuvable »."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "cfg"))
+    monkeypatch.delenv("CAIRN_HS_PREFIX", raising=False)
+    monkeypatch.delenv("CAIRN_HS_LOGS", raising=False)
+    from src.cairn import hs_setup
+    from src.cairn.config import Config
+    from src.cairn.ui.bridge import TrackerBridge
+
+    monkeypatch.setattr(hs_setup, "iter_candidate_prefixes", lambda: iter(()))
+    logs = tmp_path / "jeu" / "Logs"
+    (logs / "Hearthstone_2026_10_20_10_00_00").mkdir(parents=True)
+    (tmp_path / "vide").mkdir()
+
+    bridge = TrackerBridge()
+    try:
+        assert bridge.setupProblem == "no_prefix"
+        assert not bridge.setGamePath(str(tmp_path / "vide"))
+        assert bridge.hsGamePath == "" and Config.load().hs_logs == ""
+
+        assert bridge.setGamePath(str(logs.parent))
+        assert Config.load().hs_logs == str(logs)
+        assert bridge.hsGamePath == str(logs)
+        assert bridge.setupProblem == ""
+
+        assert bridge.setGamePath("")            # retour à la détection
+        assert bridge.setupProblem == "no_prefix"
+    finally:
+        bridge.shutdown()
+
+
 def test_apercu_dans_le_panneau(tmp_path, monkeypatch):
     """Sous Niri (et les autres mosaïques), chaque fenêtre d'aperçu prenait le
     focus : le panneau perdait le survol, l'aperçu se fermait, et ça bouclait.

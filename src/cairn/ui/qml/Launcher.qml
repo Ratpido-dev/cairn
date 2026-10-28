@@ -119,9 +119,15 @@ Window {
                       "注意 —— 此操作不可撤销"],
         "no":        ["Non, annuler", "No, cancel", "不，取消"],
         "yes":       ["Oui, supprimer", "Yes, delete", "是，删除"],
-        "noPrefix":  ["⚠ Hearthstone est introuvable. Indique le dossier qui contient « drive_c » (variable CAIRN_HS_PREFIX), ou directement son dossier Logs pour une version native (CAIRN_HS_LOGS), puis relance Cairn — ou lance « python tools/doctor.py » pour un diagnostic.",
-                      "⚠ Hearthstone not found. Point Cairn at the folder containing “drive_c” (CAIRN_HS_PREFIX), or straight at its Logs folder for a native port (CAIRN_HS_LOGS), and restart — or run “python tools/doctor.py” to diagnose.",
-                      "⚠ 找不到炉石传说。请指定包含「drive_c」的文件夹（环境变量 CAIRN_HS_PREFIX）；若是原生移植版，就直接指定它的 Logs 文件夹（CAIRN_HS_LOGS），然后重启 Cairn —— 或者运行「python tools/doctor.py」做一次诊断。"],
+        "noPrefix":  ["⚠ Hearthstone est introuvable. Colle ci-dessous le dossier qui contient « drive_c » (le prefix Wine/Proton), ou directement le dossier Logs pour une version native — ou lance « cairn-doctor » pour un diagnostic.",
+                      "⚠ Hearthstone not found. Paste below the folder containing “drive_c” (the Wine/Proton prefix), or straight its Logs folder for a native port — or run “cairn-doctor” to diagnose.",
+                      "⚠ 找不到炉石传说。请在下方粘贴包含「drive_c」的文件夹（Wine/Proton 前缀）；若是原生移植版，就直接粘贴它的 Logs 文件夹 —— 或者运行「cairn-doctor」做一次诊断。"],
+        "gamePathHint":["Dossier du jeu : prefix (avec « drive_c ») ou dossier Logs",
+                        "Game folder: prefix (with “drive_c”) or Logs folder",
+                        "游戏文件夹：前缀（含「drive_c」）或 Logs 文件夹"],
+        "gamePathBad":["Aucun Hearthstone dans ce dossier : ni « drive_c/Program Files (x86)/Hearthstone », ni dossier Logs.",
+                       "No Hearthstone in this folder: neither “drive_c/Program Files (x86)/Hearthstone” nor a Logs folder.",
+                       "这个文件夹里没有炉石传说：既没有「drive_c/Program Files (x86)/Hearthstone」，也没有 Logs 文件夹。"],
         "logsOff":   ["⚠ Hearthstone n'écrit pas ses journaux : Cairn ne peut rien suivre. Un clic active l'enregistrement, puis REDÉMARRE le jeu.",
                       "⚠ Hearthstone isn't writing its logs, so Cairn can't track anything. One click enables them, then RESTART the game.",
                       "⚠ 炉石没有在写日志：Cairn 什么都追踪不到。点一下即可开启日志记录，然后重启游戏。"],
@@ -264,6 +270,47 @@ Window {
                 currentIndex: combo.highlightedIndex
                 ScrollIndicator.vertical: ScrollIndicator { }
             }
+        }
+    }
+
+    // Emplacement du jeu, collé à la main. Remplace les variables
+    // CAIRN_HS_PREFIX / CAIRN_HS_LOGS : un « export » tapé dans un terminal
+    // n'atteint pas Cairn lancé depuis le menu des applications (#10).
+    // Vide + ✓ = retour à la détection automatique.
+    component GamePathField: ColumnLayout {
+        Layout.fillWidth: true
+        spacing: 4
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 6
+            TextField {
+                id: pathField
+                Layout.fillWidth: true
+                text: tracker.hsGamePath
+                placeholderText: home.tr("gamePathHint")
+                color: home.thm.text
+                font.pixelSize: 11
+                background: Rectangle {
+                    radius: 6
+                    color: Qt.alpha(home.thm.text, 0.05)
+                    border.width: 1
+                    border.color: Qt.alpha(home.thm.text, 0.15)
+                }
+                onAccepted: pathError.visible = !tracker.setGamePath(text)
+            }
+            IconButton {
+                glyph: "✓"
+                onClicked: pathError.visible = !tracker.setGamePath(pathField.text)
+            }
+        }
+        Text {
+            id: pathError
+            visible: false
+            text: home.tr("gamePathBad")
+            color: home.thm.badHi
+            font.pixelSize: 11
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
         }
     }
 
@@ -617,6 +664,13 @@ Window {
                             }
                         }
                     }
+
+                    // la détection a pu tomber sur un autre prefix que celui
+                    // où l'on joue : le champ reste là, pas seulement en cas
+                    // d'échec (#10)
+                    GamePathField {
+                        visible: tracker.setupProblem !== "no_prefix"
+                    }
                 }
             }
 
@@ -666,6 +720,9 @@ Window {
                         label: home.tr(tracker.setupProblem === "log_capped"
                                        ? "liftCap" : "enableLogs")
                         onClicked: tracker.enableGameLogs()
+                    }
+                    GamePathField {
+                        visible: tracker.setupProblem === "no_prefix"
                     }
 
                 }
