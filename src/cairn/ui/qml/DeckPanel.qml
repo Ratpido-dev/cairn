@@ -15,6 +15,8 @@ Window {
     title: "Cairn · deck"
     color: "transparent"
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    // position retenue sous X11/XWayland (sous KWin : règle cairn-pos-*)
+    PositionMemory { window: root; name: "deck" }
 
     // carte survolée → aperçu (fenêtre séparée, à gauche du panneau)
     property string hoverCard: ""

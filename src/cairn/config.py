@@ -42,6 +42,11 @@ class Config:
     # chaque nouvelle fenêtre : le panneau perd le survol, l'aperçu se ferme,
     # et ça boucle. None = automatique (dans le panneau sous Wayland hors KDE).
     preview_in_panel: bool | None = None
+    # Passer par XWayland plutôt que Wayland natif. Sous GNOME, Wayland ne
+    # laisse ni garder une fenêtre au-dessus du jeu ni la placer : les
+    # overlays passaient sous Hearthstone et revenaient au centre (#11).
+    # None = automatique (oui sous GNOME). Pris en compte au lancement.
+    xwayland: bool | None = None
     language: str = "fr"  # "fr" | "en" | "zh"
     hs_prefix: str = ""  # force le prefix Wine/Proton si la détection se trompe
     # Vise directement un dossier Logs/, sans prefix : installations natives
@@ -148,6 +153,8 @@ class Config:
         cfg.hide_drawn = bool(data.get("hide_drawn", False))
         dedans = data.get("preview_in_panel")
         cfg.preview_in_panel = None if dedans is None else bool(dedans)
+        xw = data.get("xwayland")
+        cfg.xwayland = None if xw is None else bool(xw)
         langue = data.get("language")
         cfg.language = langue if langue in ("fr", "en", "zh") else "fr"
         cfg.hs_prefix = str(data.get("hs_prefix") or "")

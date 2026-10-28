@@ -1658,9 +1658,36 @@ class TrackerBridge(QObject):
             return choix
         # Seul KWin sait poser une fenêtre d'aperçu à côté de son panneau
         # (règles cairn-*) ; ailleurs sous Wayland elle atterrit où le
-        # compositeur veut, et les mosaïques lui donnent le focus.
+        # compositeur veut, et les mosaïques lui donnent le focus. Sous
+        # XWayland (GNOME), Cairn se place lui-même : la fenêtre d'aperçu va.
+        from PySide6.QtGui import QGuiApplication
+
+        if QGuiApplication.platformName() == "xcb":
+            return False
         return bool(os.environ.get("WAYLAND_DISPLAY")) and \
             "KDE" not in os.environ.get("XDG_CURRENT_DESKTOP", "").upper()
+
+    @Property(bool, constant=True)
+    def xwaylandRelevant(self):
+        """Session Wayland hors KDE, avec un serveur X : l'option XWayland a
+        un sens (sous KWin, les règles cairn-* font mieux)."""
+        return bool(os.environ.get("WAYLAND_DISPLAY")) \
+            and bool(os.environ.get("DISPLAY")) \
+            and "KDE" not in os.environ.get("XDG_CURRENT_DESKTOP", "").upper()
+
+    @Property(bool, notify=changed)
+    def useXwayland(self):
+        """Choix XWayland tel qu'il s'appliquera au PROCHAIN lancement."""
+        from ..app import wants_xwayland
+
+        env = {k: v for k, v in os.environ.items() if k != "QT_QPA_PLATFORM"}
+        return wants_xwayland(self._config.xwayland, env)
+
+    @Slot(bool)
+    def setUseXwayland(self, on: bool) -> None:
+        self._config.xwayland = bool(on)
+        self._config.save()
+        self.changed.emit()
 
     @Slot(bool)
     def setPreviewInPanel(self, inside: bool) -> None:
@@ -1840,9 +1867,18 @@ class TrackerBridge(QObject):
     def rememberPos(self, widget: str, x: int, y: int) -> None:
         """Retient où l'utilisateur a posé un widget.
 
-        Appelé au relâché du glisser, pas en continu : écrire le fichier à
-        chaque pixel parcouru rendrait le déplacement saccadé.
+        Appelé par PositionMemory.qml une fois la fenêtre posée, pas en
+        continu : écrire le fichier à chaque pixel parcouru saccaderait le
+        déplacement.
+
+        Rien sous Wayland natif : Qt n'y connaît pas la position de ses
+        fenêtres et rendait (0, 0) — on retenait ce zéro, qui empilait ensuite
+        tous les widgets dans le coin dès qu'on passait par X11 (#9).
         """
+        from PySide6.QtGui import QGuiApplication
+
+        if QGuiApplication.platformName() == "wayland":
+            return
         if self._config.pos_of(widget) == (max(0, x), max(0, y)):
             return
         self._config.set_pos(widget, x, y)
@@ -1857,7 +1893,12 @@ class TrackerBridge(QObject):
         qui l'autorisent, si.
         """
         pos = self._config.pos_of(widget)
-        return {"x": pos[0], "y": pos[1]} if pos else {}
+        # (0, 0) : le zéro qu'écrivaient les versions précédentes sous Wayland
+        # (cf. rememberPos), pas une place choisie — on le tient pour « jamais
+        # déplacé » plutôt que d'empiler les widgets dans le coin.
+        if not pos or pos == (0, 0):
+            return {}
+        return {"x": pos[0], "y": pos[1]}
 
     @Slot()
     def resetPositions(self) -> None:

@@ -63,10 +63,13 @@ of your third game. The fix is a single line, `FileSizeLimit.Int=-1` in the
 compositor centers everything. Cairn installs KWin rules `cairn-pos-*` in *Remember*
 mode, one per widget, and above all a `layer=overlay` rule — the only layer that draws
 **on top of an exclusive-fullscreen game**. On other desktops, the windows carry stable
-titles and the app_id `cairn`: enough to target them from GNOME Extensions, Hyprland,
-Sway or `wmctrl`. Card previews are then drawn **inside** the panel rather than in a
-window of their own: tiling compositors (Niri, Hyprland, Sway) focus every new window,
-and the preview kept closing in a loop. A launcher switch overrides the choice. On Niri,
+titles and the app_id `cairn`: enough to target them from Hyprland, Sway or `wmctrl`.
+On GNOME, where Wayland offers no way to stay above another window, Cairn runs through
+**XWayland**: Mutter honours "always on top" there, and Cairn remembers where the
+widgets go by itself ("Run through XWayland" switch in the launcher). Elsewhere under
+Wayland, card previews are drawn **inside** the panel rather than in a window of their
+own: tiling compositors (Niri, Hyprland, Sway) focus every new window, and the preview
+kept closing in a loop. A launcher switch overrides the choice. On Niri,
 floating the widgets without stealing focus takes one rule in `config.kdl`:
 
 ```kdl

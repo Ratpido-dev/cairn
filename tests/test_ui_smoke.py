@@ -1170,3 +1170,82 @@ def test_popup_des_secrets_limite_a_dix_lignes():
         del engine
     finally:
         bridge.shutdown()
+
+
+_POSITION = """
+import sys
+from PySide6.QtCore import QObject, QUrl
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtQuick import QQuickWindow  # noqa: F401
+from src.cairn.app import QML_DIR
+from src.cairn.config import Config
+from src.cairn.ui.bridge import TrackerBridge
+
+app = QGuiApplication([])
+nom, cle = sys.argv[1], sys.argv[2]
+bridge = TrackerBridge()
+engine = QQmlApplicationEngine()
+engine.rootContext().setContextProperty("tracker", bridge)
+engine.load(QUrl.fromLocalFile(str(QML_DIR / nom)))
+fenetre = engine.rootObjects()[0]
+print("depart", fenetre.x(), fenetre.y())
+memo = next(o for o in fenetre.findChildren(QObject)
+            if o.property("armed") is not None)
+memo.setProperty("interval", 10)
+fenetre.setVisible(True)
+app.processEvents()
+fenetre.setPosition(fenetre.x() + 55, fenetre.y() + 7)
+for _ in range(50):
+    app.processEvents()
+    if not memo.property("running") and Config.load().pos_of(cle):
+        break
+    import time; time.sleep(0.01)
+print("retenu", *(Config.load().pos_of(cle) or ("-", "-")))
+print("fenetre", fenetre.x(), fenetre.y())
+del engine
+bridge.shutdown()
+"""
+
+
+@pytest.mark.parametrize("nom,cle", [("DeckPanel.qml", "deck"),
+                                     ("OppPanel.qml", "opp"),
+                                     ("CountersPanel.qml", "counters")])
+def test_position_retenue_quand_la_fenetre_a_vraiment_bouge(tmp_path, nom, cle):
+    """#9, #11 : sous X11/XWayland, la position était retenue au relâché du
+    glisser — mais startSystemMove() confie le déplacement au compositeur,
+    le glisser est annulé AVANT que la fenêtre bouge, et l'on retenait la
+    position de départ. Les panneaux deck/adversaire, eux, ne retenaient rien.
+    Désormais : remise en place au lancement, et note quand x/y changent.
+
+    Le (0, 0) qu'écrivaient les versions précédentes sous Wayland est ignoré :
+    il empilait tous les widgets dans le coin."""
+    import json
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    (tmp_path / "cairn").mkdir()
+    (tmp_path / "cairn" / "config.json").write_text(json.dumps({"widget_pos": {
+        "deck": {"x": 410, "y": 130}, "counters": {"x": 0, "y": 0}}}))
+
+    def lance():
+        sortie = subprocess.run(
+            [sys.executable, "-c", _POSITION, nom, cle],
+            cwd=Path(__file__).resolve().parents[1], capture_output=True,
+            text=True, timeout=60,
+            env={**os.environ, "QT_QPA_PLATFORM": "offscreen",
+                 "XDG_CONFIG_HOME": str(tmp_path)},
+        )
+        assert sortie.returncode == 0, sortie.stderr[-2000:]
+        lignes = dict(l.split(" ", 1) for l in sortie.stdout.splitlines() if " " in l)
+        return {k: tuple(v.split()) for k, v in lignes.items()}
+
+    premier = lance()
+    if cle == "deck":
+        assert premier["depart"] == ("410", "130")
+    if cle == "counters":
+        assert premier["depart"] != ("0", "0")   # le zéro hérité est ignoré
+    assert premier["retenu"] == premier["fenetre"]
+    # et au lancement suivant, la fenêtre revient là où on l'a laissée
+    assert lance()["depart"] == premier["fenetre"]

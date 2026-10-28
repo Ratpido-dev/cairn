@@ -82,6 +82,10 @@ Window {
         "inlinePreviewHint": ["Plutôt qu'une fenêtre à côté. À garder pour Niri, Hyprland, Sway : ils donnent le focus à chaque fenêtre et l'aperçu se fermait en boucle.",
                               "Instead of a separate window. Keep it on for Niri, Hyprland, Sway: they focus every new window and the preview kept closing in a loop.",
                               "不再使用单独的窗口。Niri、Hyprland、Sway 下请保持开启：它们会让每个新窗口获得焦点，导致预览反复关闭。"],
+        "xwayland": ["Passer par XWayland", "Run through XWayland", "通过 XWayland 运行"],
+        "xwaylandHint": ["Pour GNOME : sous Wayland, les fenêtres ne peuvent ni rester au-dessus du jeu ni retenir leur place. Prend effet au prochain lancement de Cairn.",
+                         "For GNOME: under Wayland, windows can neither stay above the game nor keep their place. Takes effect next time Cairn starts.",
+                         "适用于 GNOME：在 Wayland 下，窗口既无法保持在游戏上方，也记不住位置。下次启动 Cairn 时生效。"],
         "handDotsHint": ["Tour d'arrivée, cadeau, vignette. À caler une fois sous son éventail : la position est retenue.",
                          "Arrival turn, gift, tile. Drag it once under their hand: the position is remembered.",
                          "到手回合、赠牌、牌面。在他的手牌下方对齐一次即可，位置会被记住。"],
@@ -136,6 +140,9 @@ Window {
                       "⚠ 炉石把日志上限设在 10 MB：对局进行到一半就会停止写入，Cairn 会变成瞎子。点一下解除上限，然后重启游戏。"],
         "enableLogs":["Activer les journaux du jeu", "Enable game logs", "开启游戏日志"],
         "liftCap":   ["Lever le plafond des journaux", "Lift the log size cap", "解除日志大小上限"],
+        // historique : partie abandonnée d'emblée, par moi ou par l'adversaire
+        "concededMe": ["concédée", "conceded", "我认输"],
+        "concededOpp":["concédé", "they quit", "对手认输"],
         "prefixFound":["Jeu détecté : ", "Game found at: ", "已检测到游戏："],
         "archetypes":["Ses decks", "Their decks", "对手的套牌"],
         "refDecks":["Listes de référence", "Reference lists", "参考牌表"],
@@ -1026,6 +1033,31 @@ Window {
                         NeonSwitch {
                             checked: tracker.previewInPanel
                             onToggled: tracker.setPreviewInPanel(checked)
+                        }
+                    }
+
+                    RowLayout {
+                        visible: tracker.xwaylandRelevant
+                        Layout.fillWidth: true
+                        ColumnLayout {
+                            spacing: 1
+                            Layout.fillWidth: true
+                            Text {
+                                text: home.tr("xwayland")
+                                color: home.thm.text
+                                font.pixelSize: 12
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: home.tr("xwaylandHint")
+                                color: home.thm.textDim
+                                font.pixelSize: 10
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+                        NeonSwitch {
+                            checked: tracker.useXwayland
+                            onToggled: tracker.setUseXwayland(checked)
                         }
                     }
 
@@ -2210,7 +2242,7 @@ Window {
                                 // ce n'est pas une déduction sur la durée.
                                 Text {
                                     text: model.quickConcede
-                                        ? (model.conceded === "me" ? "concédée" : "concédé")
+                                        ? home.tr(model.conceded === "me" ? "concededMe" : "concededOpp")
                                         : (model.duration !== "" ? "⏱ " + model.duration : "")
                                     color: model.quickConcede ? home.thm.gold
                                                               : home.thm.textFaint

@@ -8,6 +8,7 @@ téléchargée à la volée au premier lancement si elle manque.
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -135,6 +136,26 @@ def _poser_le_verrou(app, engine) -> object:
     return serveur
 
 
+def wants_xwayland(choice: bool | None, env=os.environ) -> bool:
+    """Faut-il faire tourner Cairn sous XWayland plutôt qu'en Wayland natif ?
+
+    Sous GNOME, un client Wayland ne peut ni rester au-dessus d'une autre
+    fenêtre ni se placer : les overlays passaient sous le jeu et revenaient
+    au centre à chaque lancement (#9, #11). Sous XWayland, Mutter respecte
+    « toujours au-dessus » et la position que Cairn retient lui-même.
+
+    Automatique sous GNOME seulement : KWin a ses règles (cairn-*), et Sway,
+    Hyprland, Niri les leurs, par app_id. Jamais sans serveur X (pas de
+    DISPLAY), ni quand l'utilisateur a déjà choisi via QT_QPA_PLATFORM.
+    """
+    if env.get("QT_QPA_PLATFORM") or not env.get("WAYLAND_DISPLAY") \
+            or not env.get("DISPLAY"):
+        return False
+    if choice is not None:
+        return choice
+    return "GNOME" in env.get("XDG_CURRENT_DESKTOP", "").upper()
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv if argv is None else argv)
 
@@ -152,6 +173,13 @@ def main(argv: list[str] | None = None) -> int:
 
     from .ui.bridge import TrackerBridge
 
+    from .config import Config
+
+    if wants_xwayland(Config.load().xwayland):
+        # En argument et non par l'environnement : QT_QPA_PLATFORM serait
+        # hérité par Hearthstone quand le launcher le démarre. « ;wayland » :
+        # repli si le greffon xcb ne se charge pas (libxcb-cursor absente).
+        argv = [argv[0], "-platform", "xcb;wayland", *argv[1:]]
     app = QGuiApplication(argv)
     app.setApplicationName("Cairn")
     app.setOrganizationName("cairn")

@@ -52,3 +52,30 @@ def test_config_illisible_ne_plante_pas(tmp_path):
     path = tmp_path / "config.json"
     path.write_text("{ pas du json", encoding="utf-8")
     assert Config.load(path).pos_of("counters") is None
+
+
+def test_choix_xwayland_relu(tmp_path):
+    path = tmp_path / "config.json"
+    cfg = Config.load(path)
+    assert cfg.xwayland is None          # automatique par défaut
+    cfg.xwayland = False
+    cfg.save(path)
+    assert Config.load(path).xwayland is False
+
+
+def test_xwayland_automatique_sous_gnome_seulement():
+    """#11 : sous GNOME Wayland, les overlays ne peuvent ni rester au-dessus du
+    jeu ni se placer ; XWayland le permet. Ailleurs, les compositeurs ont leurs
+    règles (KWin, Sway, Hyprland, Niri) : on ne touche à rien."""
+    from src.cairn.app import wants_xwayland
+
+    gnome = {"WAYLAND_DISPLAY": "wayland-0", "DISPLAY": ":0",
+             "XDG_CURRENT_DESKTOP": "ubuntu:GNOME"}
+    assert wants_xwayland(None, gnome)
+    assert not wants_xwayland(False, gnome)                 # choix de l'utilisateur
+    assert not wants_xwayland(None, {**gnome, "XDG_CURRENT_DESKTOP": "KDE"})
+    assert not wants_xwayland(None, {**gnome, "XDG_CURRENT_DESKTOP": "sway"})
+    assert wants_xwayland(True, {**gnome, "XDG_CURRENT_DESKTOP": "sway"})
+    assert not wants_xwayland(True, {**gnome, "DISPLAY": ""})          # pas de X
+    assert not wants_xwayland(True, {**gnome, "QT_QPA_PLATFORM": "wayland"})
+    assert not wants_xwayland(True, {"DISPLAY": ":0"})                 # déjà X11

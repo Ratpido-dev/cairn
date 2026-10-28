@@ -17,6 +17,8 @@ Window {
     title: "Cairn · adversaire"
     color: "transparent"
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    // position retenue sous X11/XWayland (sous KWin : règle cairn-pos-*)
+    PositionMemory { window: opp; name: "opp" }
 
     property string hoverCard: ""
     // texte joint à l'aperçu : le libellé propre d'un effet en jeu, dont
