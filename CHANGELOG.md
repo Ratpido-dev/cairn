@@ -6,6 +6,47 @@ change **pour qui utilise Cairn** ; le détail des décisions est dans
 
 ## [Unreleased]
 
+### Aperçu des cartes revenu (issue #8)
+
+- Depuis l'option « Aperçu des cartes dans le panneau », plus aucune ligne des
+  panneaux ne recevait le survol : l'aperçu ne s'ouvrait plus, ni dans le panneau
+  ni dans sa fenêtre quand on coupait l'option (constaté sous Sway). L'aperçu
+  intégré, posé au-dessus des lignes, gardait le survol pour lui.
+
+### Fond du deck et L'Étendue infinie (issue #5)
+
+- **Sir Finley, guide maritime** : les cartes de la main renvoyées au fond du deck
+  apparaissent dans « FOND DU DECK », avec leur nom. Elles en sortent quand on
+  les repioche, et la section se vide quand le deck est mélangé.
+- **Sphère de sapience** : choisir « Un nouveau destin » envoie la carte du
+  dessus dans « FOND DU DECK ».
+- Nouveau compteur **L'Étendue infinie** (des deux camps) : son coût du moment.
+  Exact quand elle est en main (le jeu le publie) ; au deck, recompté à partir
+  des pioches, cartes jouées et serviteurs morts des deux joueurs.
+
+### Dossier du jeu dans le launcher (issue #10)
+
+- Nouveau champ « Dossier du jeu » : on y colle le prefix (dossier qui contient
+  `drive_c`) ou le dossier `Logs` d'une version native, Cairn devine lequel et le
+  retient. Un `export CAIRN_HS_PREFIX=…` tapé dans un terminal n'atteint pas
+  Cairn lancé depuis le menu des applications ; le README dit désormais où mettre
+  la variable pour qu'elle serve.
+- Avec un dossier `Logs` seul (portage natif), l'alerte « Hearthstone
+  introuvable » ne s'affiche plus à tort.
+
+### Positions des widgets et premier plan hors KDE (issues #9, #11)
+
+- Sous X11, la position retenue était celle d'AVANT le déplacement : le glisser
+  est confié au gestionnaire de fenêtres, qui l'annule avant que la fenêtre ne
+  bouge. Cairn note maintenant la position quand elle change vraiment. Les
+  panneaux deck et adversaire retiennent aussi la leur.
+- Sous Wayland, Cairn enregistrait `(0, 0)` faute de connaître ses positions.
+  Ces zéros sont ignorés, et plus rien n'est écrit sous Wayland natif.
+- GNOME : Cairn passe par **XWayland** (automatique, interrupteur « Passer par
+  XWayland » dans le launcher, effet au prochain lancement). Sous Wayland, Mutter
+  ne laisse ni garder une fenêtre au-dessus du jeu ni la placer.
+- Historique : « concédée / concédé » suit la langue de l'interface.
+
 ### Interface en chinois (zhCN)
 
 - Troisième langue d'interface : **中文**. Le sélecteur du launcher passe de
