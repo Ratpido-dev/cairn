@@ -36,9 +36,13 @@ Item {
         active && above < body.implicitHeight
             ? cursorY + gap + body.implicitHeight + margin : 0
 
-    // Repère la souris sur tout le panneau sans rien intercepter : les
-    // HoverHandler des lignes en dessous reçoivent toujours le survol.
-    HoverHandler { id: souris }
+    // Repère la souris sur tout le panneau sans rien intercepter. Rattaché au
+    // FOND du panneau, pas à cet Item : posé au-dessus des lignes, un Item
+    // qui accepte le survol le garde pour lui (Qt 6.11), plus aucune ligne
+    // n'était survolée et l'aperçu ne s'ouvrait plus, ni ici ni dans sa
+    // fenêtre (#8). Le fond est un ANCÊTRE des lignes : il reçoit le survol
+    // en même temps qu'elles. Même repère que cet Item (anchors.fill).
+    HoverHandler { id: souris; parent: inline.parent }
 
     CardPreviewBody {
         id: body

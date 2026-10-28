@@ -1036,6 +1036,66 @@ def test_apercu_dans_le_panneau(tmp_path, monkeypatch):
         bridge.shutdown()
 
 
+_SURVOL = """
+import sys
+from PySide6.QtCore import QEvent, QPointF, Qt, QUrl
+from PySide6.QtGui import QGuiApplication, QMouseEvent
+from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtQuick import QQuickWindow  # noqa: F401
+from src.cairn.ui.bridge import TrackerBridge
+from tools.panel import QML, FixtureReplayer
+
+app = QGuiApplication([])
+replayer = FixtureReplayer(speed=1)
+bridge = TrackerBridge(logs_root=replayer.logs_root, poll_ms=100_000,
+                       history_path=replayer.history_path, assume_running=True)
+bridge._config.preview_in_panel = sys.argv[1] == "1"
+replayer._chunk = 2_000_000
+replayer.step()
+bridge.refresh()
+engine = QQmlApplicationEngine()
+engine.rootContext().setContextProperty("tracker", bridge)
+engine.load(QUrl.fromLocalFile(str(QML)))
+fenetre = engine.rootObjects()[0]
+fenetre.show()
+app.processEvents()
+survolees = set()
+for y in range(100, 400, 20):
+    app.sendEvent(fenetre, QMouseEvent(QEvent.MouseMove, QPointF(150, y),
+                  QPointF(150, y), Qt.NoButton, Qt.NoButton, Qt.NoModifier))
+    survolees.add(fenetre.property("hoverCard"))
+print(len(survolees - {""}))
+del engine
+bridge.shutdown()
+replayer.cleanup()
+"""
+
+
+@pytest.mark.parametrize("dedans", [True, False])
+def test_l_aperçu_dans_le_panneau_ne_vole_pas_le_survol(dedans):
+    """#8 : l'aperçu dans le panneau est posé AU-DESSUS des lignes. Son
+    HoverHandler gardait le survol pour lui : plus aucune ligne n'était
+    survolée, et l'aperçu ne s'ouvrait plus — ni dans le panneau, ni dans sa
+    fenêtre quand on coupait l'option. Une vraie souris doit atteindre les
+    lignes dans les deux modes.
+
+    Dans un processus à part : livrer la souris demande de faire tourner la
+    boucle d'événements, qui réveillerait les fenêtres des tests précédents."""
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    racine = Path(__file__).resolve().parents[1]
+    sortie = subprocess.run(
+        [sys.executable, "-c", _SURVOL, "1" if dedans else "0"],
+        cwd=racine, capture_output=True, text=True, timeout=60,
+        env={**os.environ, "QT_QPA_PLATFORM": "offscreen"},
+    )
+    assert sortie.returncode == 0, sortie.stderr[-2000:]
+    survolees = int(sortie.stdout.strip().splitlines()[-1])
+    assert survolees > 0, "aucune ligne du deck n'a reçu le survol"
+
+
 def test_popup_des_secrets_limite_a_dix_lignes():
     """En Wild, une classe peut avoir plus de quinze secrets possibles : le
     popup s'arrête à dix lignes et fait défiler le reste, au lieu de
