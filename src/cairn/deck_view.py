@@ -19,8 +19,10 @@ from .deckstring import DeckstringError, decode_deckstring
 from .game_state import (
     DECK,
     Death,
+    DeckBottom,
     DeckEntry,
     DeckLeave,
+    DeckShuffle,
     Draw,
     Entity,
     Game,
@@ -82,6 +84,15 @@ def opponent_class(game: Game, db: CardsDb) -> str | None:
 TOLVIR = "CATA_560"
 TOLVIR_COST = 1
 TOLVIR_TYPES = ("MINION",)
+
+# « Échange votre main avec le fond de votre deck » (#5). Le drapeau « pos »
+# des cartes ne l'attrape pas — sa formule n'est pas « au fond » — et il ne
+# vise que ce qu'une carte CRÉE ; Finley, lui, renvoie la main existante.
+FINLEY = "TSC_908"
+
+
+def _puts_at_bottom(db: CardsDb, card_id: str | None) -> bool:
+    return bool(card_id) and (card_id == FINLEY or card_id in db.deck_bottom_ids)
 
 
 def _tolvir_relevant(game: Game, db: CardsDb, player_id: int | None, rows) -> bool:
@@ -606,6 +617,20 @@ def _graveyard(game: Game, db: CardsDb, player_id: int | None) -> list[DeadMinio
     return sorted(_group(rows, key=lambda r: r.card_id), key=lambda r: (-r.cost, r.label))
 
 
+def _bottom_row(db: CardsDb, card_id: str | None, source_id: str | None) -> EntryRow:
+    """Ligne « fond du deck » d'une carte de la liste, avec l'effet qui l'y a mise."""
+    card = db.by_card_id.get(card_id or "")
+    source = db.by_card_id.get(source_id or "")
+    return EntryRow(
+        label=card["name"] if card else "?",
+        origin=source["name"] if source else "",
+        known=card is not None,
+        card_id=card_id or "",
+        rarity=(card.get("rarity", "") if card else ""),
+        pos="bottom",
+    )
+
+
 def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb,
                       lang: str = "fr") -> DeckView:
     view = DeckView()
@@ -649,12 +674,30 @@ def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb,
     # --- rejouer les événements du point de vue du deck local ---------------
     # entrées vivantes : entity_id → EntryRow (retirées quand la carte ressort)
     live_entries: dict[int, EntryRow] = {}
+    # Cartes DE LA LISTE de départ qu'on sait au fond (main renvoyée par Sir
+    # Finley, carte glissée par la Sphère de sapience). Elles restent comptées
+    # dans le deck : ceci ne dit que leur place.
+    known_bottom: dict[int, EntryRow] = {}
     opp_counts: dict[str, OppPlay] = {}
     my_counts: dict[str, OppPlay] = {}
 
     for ev in game.events:
         mine = local is None or ev.player_id == local
+        if isinstance(ev, DeckShuffle) and (local is None or ev.player_id == local):
+            # le mélange efface ce qu'on savait des deux bouts du deck
+            known_bottom.clear()
+            for entry in live_entries.values():
+                entry.pos = ""
+            continue
+        if isinstance(ev, DeckBottom) and mine:
+            if ev.entity_id in live_entries:
+                live_entries[ev.entity_id].pos = "bottom"
+            else:
+                known_bottom[ev.entity_id] = _bottom_row(db, ev.card_id,
+                                                         ev.source_card_id)
+            continue
         if isinstance(ev, (Draw, DeckLeave)) and mine:
+            known_bottom.pop(ev.entity_id, None)
             if ev.entity_id in live_entries:
                 live_entries.pop(ev.entity_id)  # une carte « entrée » ressort
                 continue
@@ -667,6 +710,10 @@ def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb,
                 if dbf is not None and dbf in counts:
                     # carte du deck qui revient (mulligan ou renvoi)
                     remaining[dbf] = min(counts[dbf], remaining.get(dbf, 0) + 1)
+                    if _puts_at_bottom(db, ev.source_card_id):
+                        known_bottom[ev.entity_id] = _bottom_row(
+                            db, _live_card_id(game, ev.entity_id, ev.card_id),
+                            ev.source_card_id)
                     continue
             if ev.created or not ev.during_mulligan:
                 # les créations comptent TOUJOURS (Azalina ajoute avant la fin
@@ -680,14 +727,19 @@ def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb,
                     _creator_card_id(game, ev.entity_id) or ev.creator_card_id or ""
                 )
                 creator = db.by_card_id.get(creator_id)
+                pos = ("bottom" if _puts_at_bottom(db, creator_id)
+                       or _puts_at_bottom(db, ev.source_card_id)
+                       else "top" if creator_id in db.deck_top_ids else "")
+                if creator is None and pos:
+                    # sans créatrice, l'effet qui l'a placée dit d'où elle vient
+                    creator = db.by_card_id.get(ev.source_card_id or "")
                 live_entries[ev.entity_id] = EntryRow(
                     label=card["name"] if card else "?",
                     origin=creator["name"] if creator else "",
                     known=card is not None,
                     card_id=card_id,
                     rarity=(card.get("rarity", "") if card else ""),
-                    pos=("bottom" if creator_id in db.deck_bottom_ids
-                         else "top" if creator_id in db.deck_top_ids else ""),
+                    pos=pos,
                 )
         elif isinstance(ev, Play) and local is not None:
             card = db.by_card_id.get(ev.card_id or "")
@@ -743,6 +795,14 @@ def compute_deck_view(game: Game, deck: PlayerDeck | None, db: CardsDb,
     # fois ferait croire à deux exemplaires
     view.entries = [e for e in grouped.values() if not e.pos]
     view.deck_bottom = [e for e in grouped.values() if e.pos == "bottom"]
+    au_fond: dict[tuple[str, str], EntryRow] = {}
+    for entry in known_bottom.values():
+        key = (entry.label, entry.origin)
+        if key in au_fond:
+            au_fond[key].count += 1
+        else:
+            au_fond[key] = entry
+    view.deck_bottom += au_fond.values()
     view.deck_top = [e for e in grouped.values() if e.pos == "top"]
 
     # Les entrées quelconques rejoignent la LISTE DU DECK, marquées d'un cadeau.

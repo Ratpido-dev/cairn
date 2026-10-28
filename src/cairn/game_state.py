@@ -23,6 +23,14 @@ from .power_log import (
     TagChange,
 )
 
+# Sphère de sapience : au début du tour, montre la carte du dessus ; « Un
+# nouveau destin » la glisse au fond contre 1 point de durabilité.
+SPHERE = "SCH_259"
+
+def _int(raw: str | None) -> int:
+    return int(raw) if raw is not None and raw.isdigit() else 0
+
+
 # Zones (tag ZONE)
 DECK, HAND, PLAY, GRAVEYARD, SECRET, SETASIDE = (
     "DECK", "HAND", "PLAY", "GRAVEYARD", "SECRET", "SETASIDE",
@@ -111,6 +119,31 @@ class DeckEntry:
     creator_card_id: str | None
     created: bool
     during_mulligan: bool = False
+    # Carte dont l'effet est EN COURS quand l'entrée a lieu (bloc le plus
+    # intérieur) — différente du créateur : Sir Finley ne crée rien, il
+    # renvoie des cartes existantes, et c'est lui qui dit « au fond ».
+    source_card_id: str | None = None
+
+
+@dataclass
+class DeckBottom:
+    """Carte DÉJÀ au deck, glissée au fond sans changer de zone.
+
+    Aucun changement de zone ne la trahit : on ne la voit qu'à l'effet qui l'a
+    déplacée (Sphère de sapience — cf. ``_note_sphere``). L'identité vient de
+    la copie que l'effet a montrée au joueur.
+    """
+    player_id: int | None
+    entity_id: int
+    card_id: str | None
+    source_card_id: str
+
+
+@dataclass
+class DeckShuffle:
+    """Deck mélangé (SHUFFLE_DECK) : ce qu'on savait du dessus et du fond ne
+    tient plus."""
+    player_id: int
 
 
 @dataclass
@@ -312,6 +345,9 @@ class GameStateEngine:
         # début de partie — cf. Azalina, trigger START_OF_GAME avant la fin
         # du mulligan dans les logs)
         self._block_depth = 0
+        # Blocs ouverts, du plus extérieur au plus intérieur : (type, entité,
+        # carte). Dit quelle carte est en train d'agir quand une autre bouge.
+        self._blocks: list[tuple[str, int | None, str | None]] = []
 
     # ---- entrée principale -------------------------------------------------
 
@@ -326,6 +362,7 @@ class GameStateEngine:
             self._game = Game(ts=event.ts, turn_started_ts=event.ts)
             self._player_entity = {}
             self._block_depth = 0
+            self._blocks = []
             self.games.append(self._game)
             return
         if self._game is None:
@@ -345,10 +382,15 @@ class GameStateEngine:
             self._apply_tag_change(game, event)
         elif isinstance(event, BlockStart):
             self._block_depth += 1
+            ent = self._resolve(game, event.ref) if event.ref.entity_id is not None else None
+            self._blocks.append((event.block_type, ent.entity_id if ent else None,
+                                 (ent.card_id if ent else None) or event.ref.card_id))
         elif isinstance(event, BlockEnd):
             self._block_depth = max(0, self._block_depth - 1)
+            if self._blocks:
+                self._blocks.pop()
         elif isinstance(event, ShuffleDeck):
-            pass
+            game.events.append(DeckShuffle(player_id=event.player_id))
 
     def _peut_etre_une_reprise(self, game: Game, seed: str | None) -> Game:
         """Rattache un CREATE_GAME republié à la partie qu'il reprend.
@@ -438,6 +480,8 @@ class GameStateEngine:
 
         if ent is None:
             return
+        if tc.tag == "DAMAGE" and ent.card_id == SPHERE:
+            self._note_sphere(game, ent, tc.value)
         if tc.tag == "ZONE":
             old_zone = ent.zone
             ent.tags["ZONE"] = tc.value
@@ -524,6 +568,34 @@ class GameStateEngine:
                 game, ent, created=created, during_mulligan=not game._mulligan_done
             )
 
+    def _note_sphere(self, game: Game, sphere: Entity, value: str) -> None:
+        """La Sphère perd un point de durabilité DANS SON PROPRE déclenchement :
+        le joueur a choisi « Un nouveau destin », la carte du dessus part au
+        fond. Une attaque abîme aussi l'arme, mais dans un bloc ATTACK du héros.
+
+        La carte montrée est une COPIE (créée par la Sphère, tag
+        COPIED_FROM_ENTITY_ID) : elle donne l'identité, l'original l'entité.
+        """
+        if not self._blocks or self._blocks[-1][:2] != ("TRIGGER", sphere.entity_id):
+            return
+        if not value.isdigit() or int(value) <= _int(sphere.tags.get("DAMAGE")):
+            return
+        copies = [
+            e for e in game.entities.values()
+            if e.tags.get("CREATOR") == str(sphere.entity_id)
+            and e.tags.get("COPIED_FROM_ENTITY_ID", "0") not in ("", "0")
+        ]
+        if not copies:
+            return
+        copie = max(copies, key=lambda e: e.entity_id)   # celle de ce tour
+        original = int(copie.tags["COPIED_FROM_ENTITY_ID"])
+        game.events.append(DeckBottom(
+            player_id=sphere.controller,
+            entity_id=original,
+            card_id=copie.card_id,
+            source_card_id=SPHERE,
+        ))
+
     def _record_deck_entry(
         self, game: Game, ent: Entity, created: bool, during_mulligan: bool = False
     ) -> None:
@@ -537,6 +609,9 @@ class GameStateEngine:
                 creator_card_id=creator.card_id if creator else None,
                 created=created,
                 during_mulligan=during_mulligan,
+                source_card_id=next(
+                    (carte for _, _, carte in reversed(self._blocks) if carte), None
+                ),
             )
         )
 

@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from .atlas import ATLAS_ENCHANTMENT, GODFREY
 from .cards_db import CardsDb
 from .deck_view import TOLVIR, TOLVIR_COST, DeckView, plays_costing
-from .game_state import DECK, Death, Entity, Game, HAND, PLAY, Play, SECRET
+from .game_state import DECK, Death, Draw, Entity, Game, HAND, PLAY, Play, SECRET
 from .i18n import plural, t
 
 
@@ -585,6 +585,61 @@ def counter_minions_died(ctx: CounterContext) -> Counter | None:
     return None
 
 
+CEASELESS = ("GDB_142",)
+CEASELESS_BASE = 100
+
+
+def _ceaseless_cost(ctx: CounterContext, of_local: bool) -> int:
+    """Coût actuel de L'Étendue infinie : (100) moins un par carte piochée,
+    jouée ou détruite, des DEUX camps.
+
+    En main, le jeu publie le coût exact (tag COST) — réductions annexes
+    comprises, comme les (3) de Menace des profondeurs : on le prend tel quel.
+    Ailleurs (au deck, chez l'adversaire), on refait le compte. Vérifié sur
+    une partie réelle (#5) : pioches hors mulligan et cartes jouées collent au
+    tag COST, tour après tour. Les destructions sont comptées en serviteurs
+    morts ; la partie de référence n'en avait aucune pendant que la carte
+    était en main, ce terme-là n'a donc pas pu être confronté au jeu.
+    """
+    pid = ctx.player(of_local)
+    en_main = [
+        _int_tag(e, "COST", CEASELESS_BASE) for e in ctx.game.entities.values()
+        if e.card_id in CEASELESS and e.controller == pid and e.zone == HAND
+        and "COST" in e.tags
+    ]
+    if en_main:
+        return min(en_main)
+    n = sum(
+        1 for ev in ctx.game.events
+        if (isinstance(ev, Draw) and ev.turn > 0)   # tour 0 : mulligan, ignoré
+        or isinstance(ev, (Play, Death))
+    )
+    return max(0, CEASELESS_BASE - n)
+
+
+def counter_ceaseless(ctx: CounterContext) -> list[Counter]:
+    """L'Étendue infinie : son coût du moment, pour chaque camp qui l'a."""
+    out = []
+    for of_local in (True, False):
+        if not ctx.has_seen(of_local, CEASELESS):
+            continue
+        cout = _ceaseless_cost(ctx, of_local)
+        out.append(
+            Counter(
+                icon="🌌",
+                card_id=_seen_card(ctx, of_local, CEASELESS),
+                text=t("ceaseless", ctx.lang, n=cout),
+                short=f"({cout})",
+                alert=cout <= 10,
+                kind="good" if of_local else "bad",
+            )
+        )
+    if len(out) == 2:
+        for counter, of_local in zip(out, (True, False)):
+            counter.text = t("side_me" if of_local else "side_opp", ctx.lang) + counter.text
+    return out
+
+
 def _corpses(ctx: CounterContext, of_local: bool) -> int | None:
     pid = ctx.player(of_local)
     ent_id = ctx.game.player_entity.get(pid) if pid is not None else None
@@ -830,6 +885,10 @@ COUNTER_DEFS = [
         "minions_died", "🕯 Serviteurs morts n/20 (Aessina)", counter_minions_died,
         triggers=AESSINA, side="any",
     ),
+    CounterDef(
+        "ceaseless", "🌌 Coût de L'Étendue infinie", counter_ceaseless,
+        triggers=CEASELESS, side="any",
+    ),
     CounterDef("my_corpses", "☠ Mes cadavres (Chevalier de la mort)", counter_my_corpses),
     CounterDef("opp_corpses", "☠ Cadavres adverses (vs CDM)", counter_opp_corpses),
 ]
@@ -852,6 +911,7 @@ _PAIRS: dict[str, tuple[str, str]] = {
     "spells_cast":      ("spells",    ""),
     "dragons":          ("dragons",   ""),
     "minions_died":     ("died",      ""),
+    "ceaseless":        ("ceaseless", ""),
     "lethal":           ("lethal",    "opp"),
     "my_hand":          ("hand",      "me"),
     "opp_hand":         ("hand",      "opp"),
