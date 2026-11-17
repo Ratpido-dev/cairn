@@ -17,9 +17,9 @@ Window {
     // ne s'ouvre que si la question n'a jamais été posée
     visible: !tracker.consentAsked
     width: 520
-    height: Math.min(Screen.height - 80, contenu.implicitHeight + 48)
-    x: (Screen.width - width) / 2
-    y: (Screen.height - height) / 2
+    height: Math.min(tracker.gameScreen.height - 80, contenu.implicitHeight + 48)
+    x: tracker.gameScreen.x + (tracker.gameScreen.width - width) / 2
+    y: tracker.gameScreen.y + (tracker.gameScreen.height - height) / 2
     title: "Cairn — partage de parties"
     color: "transparent"
     flags: Qt.Dialog | Qt.FramelessWindowHint

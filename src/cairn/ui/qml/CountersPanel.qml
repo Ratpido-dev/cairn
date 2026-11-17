@@ -14,7 +14,7 @@ FloatingWindow {
     id: panel
     widgetName: "counters"
     title: "Cairn · compteurs"
-    defaultX: Math.round(Screen.width * 0.66)
+    defaultX: Math.round(tracker.gameScreen.width * 0.66)
     defaultY: 96
 
     // replié : on garde le titre sous la main sans le contenu

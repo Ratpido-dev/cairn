@@ -9,8 +9,8 @@ FloatingWindow {
     id: clock
     widgetName: "timer"
     title: "Cairn · chrono"
-    defaultX: Math.round(Screen.width * 0.66)
-    defaultY: Math.round(Screen.height * 0.74)
+    defaultX: Math.round(tracker.gameScreen.width * 0.66)
+    defaultY: Math.round(tracker.gameScreen.height * 0.74)
 
     visible: tracker.hsRunning && tracker.inGame && tracker.gameDuration !== ""
 

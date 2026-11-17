@@ -8,10 +8,10 @@ Window {
     readonly property real u: tracker.oppScale  // échelle réglée au launcher
     width: 260 * u
     // grandit avec le contenu jusqu'au bas de l'écran, ensuite on défile
-    height: Math.min((Screen.height - 120) / u,
+    height: Math.min((tracker.gameScreen.height - 120) / u,
                      Math.max(content.implicitHeight + 24, apercu.neededHeight)) * u
-    x: 24
-    y: 80
+    x: tracker.gameScreen.x + 24
+    y: tracker.gameScreen.y + 80
     visible: tracker.hsRunning && tracker.inGame && tracker.hasGame
              && tracker.oppPanelEnabled && oppList.count > 0
     title: "Cairn · adversaire"
@@ -276,6 +276,6 @@ Window {
         opponentSide: true
         anchorLeft: false
         x: opp.x + opp.width + 8
-        y: Math.min(opp.y + 40, Screen.height - height - 20)
+        y: Math.min(opp.y + 40, tracker.gameScreen.y + tracker.gameScreen.height - height - 20)
     }
 }
