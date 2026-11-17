@@ -7,10 +7,10 @@ Window {
     readonly property real u: tracker.panelScale  // échelle réglée au launcher
     width: 300 * u
     // grandit avec le contenu jusqu'au bas de l'écran, ensuite on défile
-    height: Math.min((Screen.height - 120) / u,
+    height: Math.min((tracker.gameScreen.height - 120) / u,
                      Math.max(content.implicitHeight + 24, apercu.neededHeight)) * u
-    x: Screen.width - width - 24
-    y: 80
+    x: tracker.gameScreen.x + tracker.gameScreen.width - width - 24
+    y: tracker.gameScreen.y + 80
     visible: tracker.hsRunning && tracker.inGame
     title: "Cairn · deck"
     color: "transparent"
@@ -419,6 +419,6 @@ Window {
         note: root.hoverNote
         opponentSide: false
         x: root.x - width - 8
-        y: Math.min(root.y + 40, Screen.height - height - 20)
+        y: Math.min(root.y + 40, tracker.gameScreen.y + tracker.gameScreen.height - height - 20)
     }
 }

@@ -5,6 +5,6 @@ AttackBadge {
     side: "good"
     widgetName: "attack_mine"
     title: "Cairn · mes dégâts"
-    defaultX: Math.round(Screen.width * 0.62)
-    defaultY: Math.round(Screen.height * 0.72)
+    defaultX: Math.round(tracker.gameScreen.width * 0.62)
+    defaultY: Math.round(tracker.gameScreen.height * 0.72)
 }

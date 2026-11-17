@@ -15,8 +15,8 @@ FloatingWindow {
     id: pop
     widgetName: "secrets"
     title: "Cairn · secrets"
-    defaultX: Math.round(Screen.width * 0.50)
-    defaultY: Math.round(Screen.height * 0.06)
+    defaultX: Math.round(tracker.gameScreen.width * 0.50)
+    defaultY: Math.round(tracker.gameScreen.height * 0.06)
 
     // carte survolée → aperçu, à droite du popup
     property string hoverCard: ""
@@ -123,6 +123,6 @@ FloatingWindow {
         opponentSide: true
         anchorLeft: false
         x: pop.x + pop.width + 8
-        y: Math.min(pop.y, Screen.height - height - 20)
+        y: Math.min(pop.y, tracker.gameScreen.y + tracker.gameScreen.height - height - 20)
     }
 }
