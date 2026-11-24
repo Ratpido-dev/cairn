@@ -20,8 +20,8 @@ FloatingWindow {
     id: hand
     widgetName: "opphand"
     title: "Cairn · main adverse"
-    defaultX: Math.round(Screen.width / 2 - 190)
-    defaultY: Math.round(Screen.height * 0.11)
+    defaultX: Math.round(tracker.gameScreen.width / 2 - 190)
+    defaultY: Math.round(tracker.gameScreen.height * 0.11)
 
     property string hoverCard: ""
     property string hoverNote: ""
@@ -223,7 +223,7 @@ FloatingWindow {
         cardId: hand.hoverCard
         note: hand.hoverNote
         opponentSide: true
-        x: Math.min(Math.max(0, hand.x), Screen.width - width - 8)
+        x: Math.min(Math.max(tracker.gameScreen.x, hand.x), tracker.gameScreen.x + tracker.gameScreen.width - width - 8)
         y: hand.y + hand.height + 6
     }
 }

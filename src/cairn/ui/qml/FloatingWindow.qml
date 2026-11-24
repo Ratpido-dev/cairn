@@ -39,8 +39,8 @@ Window {
     readonly property color good: thm.good
     readonly property color bad: thm.bad
 
-    x: defaultX
-    y: defaultY
+    x: tracker.gameScreen.x + defaultX
+    y: tracker.gameScreen.y + defaultY
     // position retenue : la remet au lancement, la note quand elle change
     PositionMemory { window: win; name: win.widgetName }
 

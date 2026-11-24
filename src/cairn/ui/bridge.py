@@ -1972,6 +1972,27 @@ class TrackerBridge(QObject):
     def barScale(self):
         return self._config.bar_scale
 
+    @Property("QVariantMap", notify=changed)
+    def gameScreen(self):
+        """Geometry of the game's screen, in desktop coordinates.
+
+        QML's ``Screen`` follows whatever monitor the window is already on, so
+        a default like ``x: 24`` landed on the left-most monitor (the desktop
+        origin) rather than the game's. Use the primary screen, or the one
+        named by ``CAIRN_SCREEN`` (e.g. ``DP-0``).
+        """
+        from PySide6.QtGui import QGuiApplication
+
+        wanted = os.environ.get("CAIRN_SCREEN", "").strip()
+        screen = next(
+            (s for s in QGuiApplication.screens() if wanted and s.name() == wanted),
+            None,
+        ) or QGuiApplication.primaryScreen()
+        if screen is None:
+            return {"x": 0, "y": 0, "width": 1920, "height": 1080}
+        g = screen.geometry()
+        return {"x": g.x(), "y": g.y(), "width": g.width(), "height": g.height()}
+
     @Property(bool, notify=changed)
     def oppPanelEnabled(self):
         return self._config.opp_panel
