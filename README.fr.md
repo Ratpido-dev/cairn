@@ -9,7 +9,7 @@ longue session. À titre de comparaison, Firestone sous Wine tourne autour de 4 
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Qt](https://img.shields.io/badge/PySide6-Qt%20Quick-41CD52?logo=qt&logoColor=white)
 [![tests](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml/badge.svg)](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml)
-![Tests](https://img.shields.io/badge/tests-456%20verts-10B981)
+![Tests](https://img.shields.io/badge/tests-481%20verts-10B981)
 ![Licence](https://img.shields.io/badge/licence-MIT-F59E0B)
 ![Plateforme](https://img.shields.io/badge/Linux-Wayland%20%7C%20X11-0B0F17?logo=linux&logoColor=white)
 

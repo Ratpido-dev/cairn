@@ -6,6 +6,21 @@ change **pour qui utilise Cairn** ; le détail des décisions est dans
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-11-24
+
+### Aperçu des cartes sous Niri, Hyprland, Sway (issue #5)
+
+- Les compositeurs en mosaïque donnent le focus à chaque nouvelle fenêtre : le
+  panneau perdait le survol, l'aperçu se fermait, et ça bouclait. L'aperçu est
+  désormais dessiné **dans** le panneau (automatique sous Wayland hors KDE,
+  interrupteur « Aperçu des cartes dans le panneau » dans le launcher). Le README
+  donne la règle Niri qui fait flotter les widgets sans voler le focus.
+
+### Popup des secrets (issue #6)
+
+- Dix lignes au plus, le reste défile : en Wild, une classe peut avoir plus de
+  quinze secrets possibles et le popup descendait jusqu'au bas de l'écran.
+
 ### Aperçu des cartes revenu (issue #8)
 
 - Depuis l'option « Aperçu des cartes dans le panneau », plus aucune ligne des

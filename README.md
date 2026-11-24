@@ -9,7 +9,7 @@ sits around 4 GB.
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Qt](https://img.shields.io/badge/PySide6-Qt%20Quick-41CD52?logo=qt&logoColor=white)
 [![tests](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml/badge.svg)](https://github.com/Ratpido-dev/cairn/actions/workflows/tests.yml)
-![Tests](https://img.shields.io/badge/tests-456%20passing-10B981)
+![Tests](https://img.shields.io/badge/tests-481%20passing-10B981)
 ![License](https://img.shields.io/badge/license-MIT-F59E0B)
 ![Platform](https://img.shields.io/badge/Linux-Wayland%20%7C%20X11-0B0F17?logo=linux&logoColor=white)
 
